@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 
 extern "C" {
+#include <memory.h>
 #include <line.h>
 }
 
@@ -8,14 +9,22 @@ class HdbLineArrayFixture : public ::testing::Test {
 protected:
     LineArray* lines;
 
+    static void SetUpTestSuite() {
+        hdb_init_heap(256, 512);
+    }
+
+    static void TearDownTestSuite() {
+        hdb_destroy_heap();
+    }
+
     virtual void SetUp() {
-        lines = (LineArray *)malloc(sizeof(LineArray));
+        lines = (LineArray *)hdb_malloc(sizeof(LineArray));
         initLineArray(lines);
     }
 
     virtual void TearDown() {
         freeLineArray(lines);
-        free((void*)lines);
+        hdb_free((void*)lines);
     }
 };
 

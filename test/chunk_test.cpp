@@ -1,21 +1,33 @@
 #include "gtest/gtest.h"
 
 extern "C" {
+    #include <memory.h>
     #include <chunk.h>
 }
+
+#ifndef HDB_TESTING
+#define HDB_TESTING 1
+#endif
 
 class HdbChunkFixture : public ::testing::Test {
 protected:
     Chunk* chunk;
 
+    static void SetUpTestSuite() {
+        hdb_init_heap(256, 512);
+    }
+
+    static void TearDownTestSuite() {
+        hdb_destroy_heap();
+    }
+
     virtual void SetUp() {
-        chunk = (Chunk*)malloc(sizeof(Chunk));
+        chunk = (Chunk*)hdb_malloc(sizeof(Chunk));
         initChunk(chunk);
     }
 
     virtual void TearDown() {
-        freeChunk(chunk);
-        free((void*)chunk);
+        hdb_free(chunk);
     }
 };
 

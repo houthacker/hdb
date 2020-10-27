@@ -95,9 +95,9 @@ void writeChunk(Chunk* const chunk, uint8_t byte, int line);
  * Stores the Value within the Chunk and writes the required instructions
  * to retrieve it later.
  *
- * @param chunk The Chunk to write to.
- * @param value The constant value to store.
- * @param line The source code line the constant was introduced.
+ * \param chunk The Chunk to write to.
+ * \param value The constant value to store.
+ * \param line The source code line the constant was introduced.
  */
 void writeConstant(Chunk* const chunk, Value value, int line);
 

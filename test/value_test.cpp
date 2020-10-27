@@ -1,21 +1,34 @@
 #include "gtest/gtest.h"
 
 extern "C" {
+#include <memory.h>
 #include <value.h>
 }
+
+#ifndef HDB_TESTING
+#define HDB_TESTING 1
+#endif
 
 class HdbValueFixture : public ::testing::Test {
 protected:
     ValueArray * values;
 
+    static void SetUpTestSuite() {
+        hdb_init_heap(256, 512);
+    }
+
+    static void TearDownTestSuite() {
+        hdb_destroy_heap();
+    }
+
     virtual void SetUp() {
-        values = (ValueArray *)malloc(sizeof(ValueArray));
+        values = (ValueArray *)hdb_malloc(sizeof(ValueArray));
         initValueArray(values);
     }
 
     virtual void TearDown() {
         freeValueArray(values);
-        free((void*)values);
+        hdb_free(values);
     }
 };
 

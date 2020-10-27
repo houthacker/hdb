@@ -10,14 +10,13 @@ void initLineArray(LineArray* lineArray) {
 }
 
 void freeLineArray(LineArray* lineArray) {
-    FREE_ARRAY(Line, lineArray->lines, lineArray->capacity);
+    FREE_ARRAY(Line, lineArray->lines);
     initLineArray(lineArray);
 }
 
 static void grow(LineArray* lineArray) {
-    int oldCapacity = lineArray->capacity;
-    lineArray->capacity = GROW_CAPACITY(oldCapacity);
-    lineArray->lines = GROW_ARRAY(Line, lineArray->lines, oldCapacity, lineArray->capacity);
+    lineArray->capacity = GROW_CAPACITY(lineArray->capacity);
+    lineArray->lines = GROW_ARRAY(Line, lineArray->lines, lineArray->capacity);
 }
 
 static int compareLines(const void* left, const void* right) {
