@@ -10,20 +10,27 @@
 #define HDB_DEBUG_H
 
 /**
- * Prints a string representation of all bytecode instructions within the chunk_t to standard out.
+ * Prints a string representation of all bytecode instructions within the hdb_chunk_t to standard out.
  *
- * \param chunk The chunk_t to disassemble.
- * \param name The name of the chunk_t to refer to.
+ * \param chunk The hdb_chunk_t to disassemble.
+ * \param name The name of the hdb_chunk_t to refer to.
  */
-void disassembleChunk(chunk_t* chunk, const char* name);
+void hdb_dbg_disassemble_chunk(hdb_chunk_t* chunk, const char* name);
 
 /**
  * Prints a string representation of the bytecode instruction at the given offset to standard out.
  *
- * \param chunk The chunk_t containing the instruction to print.
+ * \param chunk The hdb_chunk_t containing the instruction to print.
  * \param offset The offset to read the instruction from.
  * \return The next offset an instruction can be read from.
  */
-int disassembleInstruction(chunk_t* chunk, int offset);
+int hdb_dbg_disassemble_instruction(hdb_chunk_t* chunk, int32_t offset);
+
+/**
+ * Prints the given value to standard out.
+ *
+ * \param value The value to print
+ */
+void hdb_dbg_print_value(hdb_value_t value);
 
 #endif //HDB_DEBUG_H

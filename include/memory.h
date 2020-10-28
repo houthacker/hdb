@@ -18,6 +18,17 @@
 #define HDB_FREE_ARRAY(type, pointer) \
     hdb_reallocate(pointer, 0)
 
+#define HDB_HEAP_INITIAL_MIN_SIZE 8 * 1024 * 1024 // 8MB
+#define HDB_HEAP_PAGE_SIZE sizeof(hdb_memory_block_t)
+#define HDB_HEAP_INCREASE_SIZE 8 * 1024 * 1024 // 8MB
+#define HDB_HEAP_RETURN_BARRIER 8 * 1024 * 1024 // 8MB
+
+#define HDB_MEMORY_PTR(ptr)  \
+    ((void*)(ptr) + sizeof(hdb_memory_block_t))
+
+#define HDB_BLOCK_PTR(ptr) \
+    ((void*)(ptr) - sizeof(hdb_memory_block_t))
+
 /**
  * A header which stores size information about the adjacent blob of data.
  */
@@ -127,17 +138,6 @@ typedef struct hdb_heap_view {
     hdb_memory_block_view_t* free_blocks;
 } hdb_heap_view_t;
 
-#define HDB_HEAP_INITIAL_MIN_SIZE 8 * 1024 * 1024 // 8MB
-#define HDB_HEAP_PAGE_SIZE sizeof(hdb_memory_block_t)
-#define HDB_HEAP_INCREASE_SIZE 8 * 1024 * 1024 // 8MB
-#define HDB_HEAP_RETURN_BARRIER 8 * 1024 * 1024 // 8MB
-
-#define HDB_MEMORY_PTR(ptr)  \
-    ((void*)(ptr) + sizeof(hdb_memory_block_t))
-
-#define HDB_BLOCK_PTR(ptr) \
-    ((void*)(ptr) - sizeof(hdb_memory_block_t))
-
 /**
  * Initializes the heap for the HDB Virtual Machine. All memory required during the runtime of the HDB Virtual Machine
  * is retrieved from this heap. The initial size of the heap is \c min_size. If the heap has been initialized before,
@@ -148,7 +148,7 @@ typedef struct hdb_heap_view {
  * \param max_size The maximum size of the heap in bytes, must be larger than \c min_size.
  * \return: A non-modifiable view of the heap.
  */
-hdb_heap_view_t* hdb_init_heap(size_t min_size, size_t max_size);
+hdb_heap_view_t* hdb_heap_init(size_t min_size, size_t max_size);
 
 /**
  * \return A non-modifiable view of the current heap.
@@ -158,13 +158,13 @@ hdb_heap_view_t* hdb_heap(void);
 /**
  * Merges contiguous free blocks into a single block.
  */
-void hdb_compact_heap(void);
+void hdb_heap_compact(void);
 
 /**
  * Returns memory claimed by the current heap to the underlying OS. This causes all pointers still in use to become
  * invalid. Any request for new memory using \c hdb_malloc will return \c NULL.
  */
-void hdb_destroy_heap();
+void hdb_heap_free(void);
 
 /**
  * Allocates a new block of uninitialized memory of at least size bytes, aligned to \c HDB_HEAP_PAGE_SIZE bytes.
@@ -181,7 +181,7 @@ void* hdb_malloc(size_t size);
 
 /**
  * Frees the memory space pointed to by ptr, which must have been returned by previous call to \c hdb_malloc().
- * Otherwise, or if \c free(ptr) has already been called before, undefined behaviour occurs. If \c ptr is \c NULL,
+ * Otherwise, or if \c hdb_free(ptr) has already been called before, undefined behaviour occurs. If \c ptr is \c NULL,
  * no operation is performed.
  *
  * \param ptr The pointer to the memory to free.

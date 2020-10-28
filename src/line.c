@@ -3,88 +3,88 @@
 #include "line.h"
 #include "memory.h"
 
-void init_line_array(line_array_t* array) {
+void hdb_line_array_init(hdb_line_array_t* array) {
     array->count = 0;
     array->capacity = 0;
     array->lines = NULL;
 }
 
-void free_line_array(line_array_t* array) {
-    HDB_FREE_ARRAY(Line, array->lines);
-    init_line_array(array);
+void hdb_line_array_free(hdb_line_array_t* array) {
+    HDB_FREE_ARRAY(hdb_line_t, array->lines);
+    hdb_line_array_init(array);
 }
 
-static void grow(line_array_t* lineArray) {
-    lineArray->capacity = HDB_GROW_CAPACITY(lineArray->capacity);
-    lineArray->lines = HDB_GROW_ARRAY(line_t, lineArray->lines, lineArray->capacity);
+static void grow(hdb_line_array_t* lines) {
+    lines->capacity = HDB_GROW_CAPACITY(lines->capacity);
+    lines->lines = HDB_GROW_ARRAY(hdb_line_t, lines->lines, lines->capacity);
 }
 
-static int compareLines(const void* left, const void* right) {
-    line_t* l = (line_t*)left;
-    line_t* r = (line_t*)right;
+static int compare_lines(const void* left, const void* right) {
+    hdb_line_t* l = (hdb_line_t*)left;
+    hdb_line_t* r = (hdb_line_t*)right;
 
     if (l->line == r->line) { return 0; }
     else if (l->line < r->line) { return -1; }
     else return 1;
 }
 
-static line_t createLine(int line) {
-    line_t l;
+static hdb_line_t create_line(int32_t line) {
+    hdb_line_t l;
     l.line = line;
-    l.instructionCount = 1;
+    l.instruction_count = 1;
 
     return l;
 }
 
-int encode_line(line_array_t* array, int line) {
+int hdb_line_encode(hdb_line_array_t* array, int32_t line) {
     if (array->count == 0 || array->capacity < array->count + 1) {
         grow(array);
     }
 
     if (array->count == 0) {
-        array->lines[0] = createLine(line);
+        array->lines[0] = create_line(line);
         return array->count++;
     } else {
-        line_t *lastLine = &array->lines[array->count - 1];
+        hdb_line_t *lastLine = &array->lines[array->count - 1];
 
         if (lastLine->line == line) {
-            lastLine->instructionCount++;
+            lastLine->instruction_count++;
             return array->count - 1;
 
         } else if (lastLine->line < line) {
-            array->lines[array->count] = createLine(line);
+            array->lines[array->count] = create_line(line);
             return array->count++;
         } else {
             // This is the most expensive case, because
             // ordering is enforced here.
             // If lines are added in order, this code is never executed.
             // Try to find line, otherwise append
-            for (int i = 0; i < array->count; i++) {
-                line_t* element = &array->lines[i];
+            for (int32_t i = 0; i < array->count; i++) {
+                hdb_line_t* element = &array->lines[i];
                 if (element->line == line) {
-                    element->instructionCount++;
+                    element->instruction_count++;
                     return i;
                 }
             }
 
-            array->lines[array->count] = createLine(line);
-            qsort(array->lines, array->count + 1, sizeof(line_t), compareLines);
+            array->lines[array->count] = create_line(line);
+            qsort(array->lines, array->count + 1, sizeof(hdb_line_t), compare_lines);
 
             return array->count++;
         }
     }
 }
 
-int decode_line(line_array_t* array, int instruction_index) {
+int hdb_line_decode(hdb_line_array_t* array, int32_t instruction_index) {
     if (instruction_index < 0) {
         return -1;
     }
 
     int maxIndex = -1;
 
-    for (int i = 0; i < array->count; i++) {
-        line_t* l = &array->lines[i];
-        maxIndex += l->instructionCount;
+    for (int32_t i = 0; i < array->count; i++) {
+        hdb_line_t* l = &array->lines[i];
+        maxIndex += l->instruction_count;
 
         if (maxIndex >= instruction_index) {
             return l->line;

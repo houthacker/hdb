@@ -1,72 +1,79 @@
-//
-// Created by houthacker on 24-10-20.
-//
 #include <stdio.h>
 
 #include "debug.h"
 #include "value.h"
 #include "line.h"
 
-static void printValue(value_t value) {
-    printf("%g", value);
-}
-
-static int constantInstruction(const char* name, chunk_t* chunk, int offset) {
-    uint8_t constant = chunk->code[offset + 1];
-    printf("%-16s %4d '", name, constant);
-    printValue(chunk->constants.values[constant]);
+static int constant_instruction(const char* name, hdb_chunk_t* chunk, int32_t offset) {
+    uint8_t index = chunk->code[offset + 1];
+    printf("%-16s %4d '", name, index);
+    hdb_dbg_print_value(chunk->constants.values[index]);
     printf("'\n");
 
     return offset + 2;
 }
 
-static int constantLongInstruction(const char* name, chunk_t* chunk, int offset) {
+static int constant_long_instruction(const char* name, hdb_chunk_t* chunk, int32_t offset) {
     uint8_t array[4] = {
             chunk->code[offset + 3],
             chunk->code[offset + 2],
             chunk->code[offset + 1],
             0
     };
-    int index = *(int*)array;
+    int32_t index = *(int32_t*)array;
     printf("%-16s %4d '", name, index);
-    printValue(chunk->constants.values[index]);
+    hdb_dbg_print_value(chunk->constants.values[index]);
     printf("'\n");
 
     return offset + 4;
 }
 
-static int simpleInstruction(const char* name, int offset) {
+static int simple_instruction(const char* name, int32_t offset) {
     printf("%s\n", name);
     return offset + 1;
 }
 
-void disassembleChunk(chunk_t* chunk, const char* name) {
+void hdb_dbg_disassemble_chunk(hdb_chunk_t* chunk, const char* name) {
     printf("== %s ==\n", name);
 
-    for (int offset = 0; offset < chunk->count;) {
-        offset = disassembleInstruction(chunk, offset);
+    for (int32_t offset = 0; offset < chunk->count;) {
+        offset = hdb_dbg_disassemble_instruction(chunk, offset);
     }
 }
 
-int disassembleInstruction(chunk_t* chunk, int offset) {
+int hdb_dbg_disassemble_instruction(hdb_chunk_t* chunk, int32_t offset) {
     printf("%04d ", offset);
     if (offset > 0 &&
-            decode_line(&chunk->lines, offset) == decode_line(&chunk->lines, offset - 1)) {
+            hdb_line_decode(&chunk->lines, offset) == hdb_line_decode(&chunk->lines, offset - 1)) {
         printf("   | ");
     } else {
-        printf("%4d ", decode_line(&chunk->lines, offset));
+        printf("%4d ", hdb_line_decode(&chunk->lines, offset));
     }
 
     uint8_t instruction = chunk->code[offset];
     switch (instruction) {
         case OP_CONSTANT:
-            return constantInstruction("OP_CONSTANT", chunk, offset);
+            return constant_instruction("OP_CONSTANT", chunk, offset);
         case OP_CONSTANT_LONG:
-            return constantLongInstruction("OP_CONSTANT_LONG", chunk, offset);
+            return constant_long_instruction("OP_CONSTANT_LONG", chunk, offset);
+        case OP_ADD:
+            return simple_instruction("OP_ADD", offset);
+        case OP_SUBTRACT:
+            return simple_instruction("OP_SUBTRACT", offset);
+        case OP_MULTIPLY:
+            return simple_instruction("OP_MULTIPLY", offset);
+        case OP_DIVIDE:
+            return simple_instruction("OP_DIVIDE", offset);
+        case OP_NEGATE:
+            return simple_instruction("OP_NEGATE", offset);
         case OP_RETURN:
-            return simpleInstruction("OP_RETURN", offset);
+            return simple_instruction("OP_RETURN", offset);
         default:
             printf("Unknown opcode %d\n", instruction);
             return offset + 1;
     }
+}
+
+void hdb_dbg_print_value(hdb_value_t value) {
+    printf("%g", value);
 }

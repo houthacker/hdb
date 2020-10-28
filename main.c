@@ -4,18 +4,18 @@
 #include "memory.h"
 
 int main() {
-    chunk_t chunk;
-    init_chunk(&chunk);
+    hdb_chunk_t chunk;
+    hdb_chunk_init(&chunk);
 
-    //write_constant(&chunk, 1.2, 123);
+    //hdb_chunk_write_constant(&chunk, 1.2, 123);
     for (int i = 0; i < 260; i++) {
-        write_constant(&chunk, 1.0 * i, i + 1);
+        hdb_chunk_write_constant(&chunk, 1.0 * i, i + 1);
     }
-    write_chunk(&chunk, OP_RETURN, 261);
+    hdb_chunk_write(&chunk, OP_RETURN, 261);
 
-    disassembleChunk(&chunk, "test chunk");
+    hdb_dbg_disassemble_chunk(&chunk, "test chunk");
 
-    free_chunk(&chunk);
+    hdb_chunk_free(&chunk);
 
     return 0;
 }

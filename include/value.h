@@ -10,7 +10,7 @@
 /**
  * Type definition for the (only) supported value type in hdb
  */
-typedef double value_t;
+typedef double hdb_value_t;
 
 /**
  * Structure to store multiple values.
@@ -30,15 +30,15 @@ typedef struct {
     /**
      * The value array.
      */
-    value_t* values;
-} value_array_t;
+    hdb_value_t* values;
+} hdb_value_array_t;
 
 /**
  * Initializes the given array. Must be called before using it.
  *
  * \param array The value array to be initialized.
  */
-void init_value_array(value_array_t* array);
+void hdb_init_value_array(hdb_value_array_t* array);
 
 /**
  * Writes a new value to the array.
@@ -46,13 +46,13 @@ void init_value_array(value_array_t* array);
  * \param array The value array to be written to.
  * \param value The value to be written.
  */
-void write_value_array(value_array_t* array, value_t value);
+void hdb_write_value_array(hdb_value_array_t* array, hdb_value_t value);
 
 /**
- * Returns the memory claimed by the given value_array_t to the heap.
+ * Returns the memory claimed by the given hdb_value_array_t to the heap.
  *
  * \param array The array to be freed.
  */
-void free_value_array(value_array_t* array);
+void hdb_free_value_array(hdb_value_array_t* array);
 
 #endif //HDB_VALUE_H

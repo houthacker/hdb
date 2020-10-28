@@ -10,37 +10,37 @@ protected:
     hdb_heap_view_t* heap;
 
     virtual void SetUp() {
-        heap = hdb_init_heap(256, 2048);
+        heap = hdb_heap_init(256, 2048);
     }
 
     virtual void TearDown() {
-        hdb_destroy_heap();
+        hdb_heap_free();
     }
 };
 
 TEST_F(HdbMemoryFixture, hdb_init_heap_illegal_parameter_order) {
-    hdb_destroy_heap();
+    hdb_heap_free();
 
-    EXPECT_EQ(hdb_init_heap(HDB_HEAP_INITIAL_MIN_SIZE, HDB_HEAP_INITIAL_MIN_SIZE - 1), nullptr);
+    EXPECT_EQ(hdb_heap_init(HDB_HEAP_INITIAL_MIN_SIZE, HDB_HEAP_INITIAL_MIN_SIZE - 1), nullptr);
     EXPECT_EQ(errno, EINVAL);
 }
 
 TEST_F(HdbMemoryFixture, hdb_init_heap_min_size_too_small) {
-    hdb_destroy_heap();
+    hdb_heap_free();
 
-    EXPECT_EQ(hdb_init_heap(0, HDB_HEAP_INITIAL_MIN_SIZE), nullptr);
+    EXPECT_EQ(hdb_heap_init(0, HDB_HEAP_INITIAL_MIN_SIZE), nullptr);
     EXPECT_EQ(errno, EINVAL);
 }
 
 TEST_F(HdbMemoryFixture, hdb_heap_states) {
     EXPECT_NE(hdb_heap(), nullptr);
 
-    hdb_destroy_heap();
+    hdb_heap_free();
     EXPECT_EQ(hdb_heap(), nullptr);
 }
 
 TEST_F(HdbMemoryFixture, hdb_malloc_without_initialized_heap) {
-    hdb_destroy_heap();
+    hdb_heap_free();
 
     void* ptr = hdb_malloc(HDB_HEAP_PAGE_SIZE);
     EXPECT_EQ(ptr, nullptr);
@@ -139,8 +139,8 @@ TEST_F(HdbMemoryFixture, hdb_malloc_free_block_fragmentation) {
     EXPECT_EQ(current_block->size, 268427264);
     EXPECT_EQ(current_block->next, nullptr);
 
-    // hdb_compact_heap should merge all blocks in a single block, since the space is contiguous.
-    hdb_compact_heap();
+    // hdb_heap_compact should merge all blocks in a single block, since the space is contiguous.
+    hdb_heap_compact();
     EXPECT_NE(heap->free_blocks, nullptr);
     EXPECT_EQ(heap->free_blocks->next, nullptr);
     EXPECT_EQ(heap->free_blocks->size, heap->current_free);

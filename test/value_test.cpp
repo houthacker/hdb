@@ -7,23 +7,23 @@ extern "C" {
 
 class HdbValueFixture : public ::testing::Test {
 protected:
-    value_array_t * values;
+    hdb_value_array_t * values;
 
     static void SetUpTestSuite() {
-        hdb_init_heap(256, 512);
+        hdb_heap_init(256, 512);
     }
 
     static void TearDownTestSuite() {
-        hdb_destroy_heap();
+        hdb_heap_free();
     }
 
     virtual void SetUp() {
-        values = (value_array_t *)hdb_malloc(sizeof(value_array_t));
-        init_value_array(values);
+        values = (hdb_value_array_t *)hdb_malloc(sizeof(hdb_value_array_t));
+        hdb_init_value_array(values);
     }
 
     virtual void TearDown() {
-        free_value_array(values);
+        hdb_free_value_array(values);
         hdb_free(values);
     }
 };
@@ -35,7 +35,7 @@ TEST_F(HdbValueFixture, initializes_correctly) {
 }
 
 TEST_F(HdbValueFixture, write_single_value) {
-    write_value_array(values, 1.337);
+    hdb_write_value_array(values, 1.337);
 
     EXPECT_EQ(values->count, 1);
     EXPECT_EQ(values->capacity, 8);
@@ -44,7 +44,7 @@ TEST_F(HdbValueFixture, write_single_value) {
 
 TEST_F(HdbValueFixture, force_value_array_grow) {
     for (int i = 0; i < 9; i++) {
-        write_value_array(values, 1.0 * i);
+        hdb_write_value_array(values, 1.0 * i);
     }
 
     EXPECT_EQ(values->count, 9);

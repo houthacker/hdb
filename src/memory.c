@@ -1,9 +1,9 @@
-#include <stdlib.h> // malloc, free
 #include <errno.h>
 #include <unistd.h> // for sbrk()
 #include <string.h> // for memcpy()
 #include <sys/sysinfo.h> // sysinfo()
 
+#include "os.h"
 #include "memory.h"
 
 hdb_heap_t* heap;
@@ -146,7 +146,7 @@ static void merge_if_continuous(hdb_memory_block_t* left, hdb_memory_block_t* ri
     }
 }
 
-hdb_heap_view_t* hdb_init_heap(size_t min_size, size_t max_size) {
+hdb_heap_view_t* hdb_heap_init(size_t min_size, size_t max_size) {
     if (max_size < min_size || min_size == 0) {
         errno = EINVAL;
         return NULL;
@@ -162,13 +162,13 @@ hdb_heap_view_t* hdb_init_heap(size_t min_size, size_t max_size) {
             .free_blocks = NULL
     };
 
-    heap = (hdb_heap_t *)malloc(sizeof(hdb_heap_t));
+    heap = (hdb_heap_t *)os_malloc(sizeof(hdb_heap_t));
     if (heap == NULL) {
         return NULL;
     }
     memcpy(heap, &init, sizeof(hdb_heap_t));
 
-    void* memory = malloc(heap->min_size);
+    void* memory = os_malloc(heap->min_size);
     if (memory == NULL) {
         return NULL;
     }
@@ -191,7 +191,7 @@ hdb_heap_view_t* hdb_heap(void) {
     return (hdb_heap_view_t*)heap;
 }
 
-void hdb_compact_heap() {
+void hdb_heap_compact() {
     hdb_memory_block_t* current_block = heap->free_blocks;
     while (current_block) {
         hdb_memory_block_t* next_block = current_block->next;
@@ -205,10 +205,10 @@ void hdb_compact_heap() {
     }
 }
 
-void hdb_destroy_heap() {
+void hdb_heap_free() {
     if (heap) {
-        free(heap->free_ptr);
-        free(heap);
+        os_free(heap->free_ptr);
+        os_free(heap);
         heap = NULL;
     }
 }
@@ -270,7 +270,7 @@ void* hdb_malloc(size_t size) {
         }
     }
 
-    abort();
+    os_abort();
 }
 
 void hdb_free(void* ptr) {
