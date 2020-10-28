@@ -19,7 +19,7 @@
     hdb_reallocate(pointer, 0)
 
 /**
- * A header which stores size information about the blob of data immediately following it.
+ * A header which stores size information about the adjacent blob of data.
  */
 typedef struct hdb_memory_block {
 
@@ -174,8 +174,6 @@ void hdb_destroy_heap();
  * \c hdb_malloc() also returns \c NULL when \c size is \c 0. To differentiate between a possible memory allocation
  * failure and this valid case, check the value of \c errno if \c NULL is returned.
  *
- *
- * \param heap The heap to acquire memory from.
  * \param size The minimum amount of bytes to allocate.
  * \return A pointer to the newly allocated memory, or \c NULL if \c size is 0 or on failure.
  */
@@ -186,7 +184,6 @@ void* hdb_malloc(size_t size);
  * Otherwise, or if \c free(ptr) has already been called before, undefined behaviour occurs. If \c ptr is \c NULL,
  * no operation is performed.
  *
- * \param heap The heap to free memory to.
  * \param ptr The pointer to the memory to free.
  */
 void hdb_free(void* ptr);
@@ -197,7 +194,6 @@ void hdb_free(void* ptr);
  * \c errno is set accordingly.
  * If a \c newSize of 0 is provided, the given pointer is freed.
  *
- * \param heap The heap to reallocate memory from.
  * \param ptr A pointer to a blob of data previously retrieved by \c hdb_malloc().
  * \param new_size The requested new data size in bytes.
  * \return A pointer to the new data, or \c NULL if no memory has been allocated.

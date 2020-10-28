@@ -23,7 +23,7 @@ typedef struct {
      * The source code line number.
      */
     int line;
-} Line;
+} line_t;
 
 /**
  * Structure to store multiple encoded lines.
@@ -43,39 +43,39 @@ typedef struct {
     /**
      * The lines, sorted by line number.
      */
-    Line* lines;
-} LineArray;
+    line_t* lines;
+} line_array_t;
 
 /**
- * Initializes the given lineArray. Must be called before using it.
+ * Initializes the given array. Must be called before using it.
  *
- * \param lineArray The line array to initialize.
+ * \param array The line array to initialize.
  */
-void initLineArray(LineArray* lineArray);
+void init_line_array(line_array_t* array);
 
 /**
- * Returns the memory claimed by the given LineArray to the heap.
+ * Returns the memory claimed by the given line_array_t to the heap.
  *
- * \param lineArray The pointer to the LineArray to be freed.
+ * \param array The pointer to the line_array_t to be freed.
  */
-void freeLineArray(LineArray* lineArray);
+void free_line_array(line_array_t* array);
 
 /**
  * Stores the given line, and increments the instruction count by one.
  *
- * \param lineArray The array of lines to encode the given line in.
+ * \param array The array of lines to encode the given line in.
  * \param line The source code line number.
  * \return The new size of the line array.
  */
-int encodeLine(LineArray* lineArray, int line);
+int encode_line(line_array_t* array, int line);
 
 /**
  * Decodes the line number at the given instruction index.
  *
- * \param lineArray The line array containing the encoded lines.
- * \param instructionIndex The index of the related bytecode instruction.
+ * \param array The line array containing the encoded lines.
+ * \param instruction_index The index of the related bytecode instruction.
  * \return The line number, or -1 if no such line exists.
  */
-int decodeLine(LineArray* lineArray, int instructionIndex);
+int decode_line(line_array_t* array, int instruction_index);
 
 #endif //HDB_LINE_H

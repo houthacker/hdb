@@ -2,7 +2,6 @@
 
 extern "C" {
 #include <memory.h>
-
 #include "hdb_tests.h"
 }
 

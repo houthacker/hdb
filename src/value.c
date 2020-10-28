@@ -1,23 +1,23 @@
 #include "memory.h"
 #include "value.h"
 
-void initValueArray(ValueArray* array) {
+void init_value_array(value_array_t* array) {
     array->values = NULL;
     array->capacity = 0;
     array->count = 0;
 }
 
-void writeValueArray(ValueArray* array, Value value) {
+void write_value_array(value_array_t* array, value_t value) {
     if (array->capacity < array->count + 1) {
         array->capacity = HDB_GROW_CAPACITY(array->capacity);
-        array->values = HDB_GROW_ARRAY(Value, array->values, array->capacity);
+        array->values = HDB_GROW_ARRAY(value_t, array->values, array->capacity);
     }
 
     array->values[array->count] = value;
     array->count++;
 }
 
-void freeValueArray(ValueArray* array) {
+void free_value_array(value_array_t* array) {
     HDB_FREE_ARRAY(Value, array->values);
-    initValueArray(array);
+    init_value_array(array);
 }

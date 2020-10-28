@@ -7,11 +7,11 @@
 #include "value.h"
 #include "line.h"
 
-static void printValue(Value value) {
+static void printValue(value_t value) {
     printf("%g", value);
 }
 
-static int constantInstruction(const char* name, Chunk* chunk, int offset) {
+static int constantInstruction(const char* name, chunk_t* chunk, int offset) {
     uint8_t constant = chunk->code[offset + 1];
     printf("%-16s %4d '", name, constant);
     printValue(chunk->constants.values[constant]);
@@ -20,7 +20,7 @@ static int constantInstruction(const char* name, Chunk* chunk, int offset) {
     return offset + 2;
 }
 
-static int constantLongInstruction(const char* name, Chunk* chunk, int offset) {
+static int constantLongInstruction(const char* name, chunk_t* chunk, int offset) {
     uint8_t array[4] = {
             chunk->code[offset + 3],
             chunk->code[offset + 2],
@@ -40,7 +40,7 @@ static int simpleInstruction(const char* name, int offset) {
     return offset + 1;
 }
 
-void disassembleChunk(Chunk* chunk, const char* name) {
+void disassembleChunk(chunk_t* chunk, const char* name) {
     printf("== %s ==\n", name);
 
     for (int offset = 0; offset < chunk->count;) {
@@ -48,13 +48,13 @@ void disassembleChunk(Chunk* chunk, const char* name) {
     }
 }
 
-int disassembleInstruction(Chunk* chunk, int offset) {
+int disassembleInstruction(chunk_t* chunk, int offset) {
     printf("%04d ", offset);
     if (offset > 0 &&
-            decodeLine(&chunk->lines, offset) == decodeLine(&chunk->lines, offset - 1)) {
+            decode_line(&chunk->lines, offset) == decode_line(&chunk->lines, offset - 1)) {
         printf("   | ");
     } else {
-        printf("%4d ", decodeLine(&chunk->lines, offset));
+        printf("%4d ", decode_line(&chunk->lines, offset));
     }
 
     uint8_t instruction = chunk->code[offset];

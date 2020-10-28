@@ -2,22 +2,22 @@
 #include "chunk.h"
 #include "memory.h"
 
-void initChunk(Chunk* chunk) {
+void init_chunk(chunk_t *const chunk) {
     chunk->count = 0;
     chunk->capacity = 0;
     chunk->code = NULL;
-    initLineArray(&chunk->lines);
-    initValueArray(&chunk->constants);
+    init_line_array(&chunk->lines);
+    init_value_array(&chunk->constants);
 }
 
-void freeChunk(Chunk* chunk) {
+void free_chunk(chunk_t *const chunk) {
     HDB_FREE_ARRAY(uint8_t, chunk->code);
-    freeLineArray(&chunk->lines);
-    freeValueArray(&chunk->constants);
-    initChunk(chunk);
+    free_line_array(&chunk->lines);
+    free_value_array(&chunk->constants);
+    init_chunk(chunk);
 }
 
-void writeChunk(Chunk* chunk, uint8_t byte, int line) {
+void write_chunk(chunk_t *const chunk, uint8_t byte, int line) {
     if (chunk->capacity < chunk->count + 1) {
         int oldCapacity = chunk->capacity;
         chunk->capacity = HDB_GROW_CAPACITY(oldCapacity);
@@ -25,17 +25,17 @@ void writeChunk(Chunk* chunk, uint8_t byte, int line) {
     }
 
     chunk->code[chunk->count] = byte;
-    encodeLine(&chunk->lines, line);
+    encode_line(&chunk->lines, line);
     chunk->count++;
 }
 
-void writeConstant(Chunk* chunk, Value value, int line) {
-    writeValueArray(&chunk->constants, value);
+void write_constant(chunk_t *const chunk, value_t value, int line) {
+    write_value_array(&chunk->constants, value);
     int idx = chunk->constants.count - 1;
 
     if (idx < 256) {
-        writeChunk(chunk, OP_CONSTANT, line);
-        writeChunk(chunk, (uint8_t) idx, line);
+        write_chunk(chunk, OP_CONSTANT, line);
+        write_chunk(chunk, (uint8_t) idx, line);
     } else {
         uint8_t array[3] = {
                 (idx >> 16) & 0xff,
@@ -43,9 +43,9 @@ void writeConstant(Chunk* chunk, Value value, int line) {
                 idx & 0xff
         };
 
-        writeChunk(chunk, OP_CONSTANT_LONG, line);
-        writeChunk(chunk, array[0], line);
-        writeChunk(chunk, array[1], line);
-        writeChunk(chunk, array[2], line);
+        write_chunk(chunk, OP_CONSTANT_LONG, line);
+        write_chunk(chunk, array[0], line);
+        write_chunk(chunk, array[1], line);
+        write_chunk(chunk, array[2], line);
     }
 }

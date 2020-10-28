@@ -1,5 +1,5 @@
 /**
- * Data structures and operations related to a \code Chunk\endcode.
+ * Data structures and operations related to a \code chunk_t\endcode.
  *
  * \since 0.0.1
  * \author houthacker
@@ -17,25 +17,25 @@
 typedef enum {
 
     /*!<
-     * OpCode to read/write a constant \code Value\endcode at an index < 256.
+     * opcode to read/write a constant \code value_t\endcode at an index < 256.
      * Operands:
      * - byte - the constant value index.
      */
     OP_CONSTANT,
 
     /*!<
-     * OpCode to read/write a constant \code Value\endcode at an index >= 256.
+     * opcode to read/write a constant \code value_t\endcode at an index >= 256.
      * Operands:
      * - int - an 24-bits integer containing the constant value index.
      */
     OP_CONSTANT_LONG,
 
     /*!<
-     * OpCode to return the value at the top of the stack to the caller.
+     * opcode to return the value at the top of the stack to the caller.
      * Operands: none
      */
     OP_RETURN,
-} OpCode;
+} opcode;
 
 /**
  * Structure to contain information about a chunk of byte code.
@@ -43,7 +43,7 @@ typedef enum {
 typedef struct {
 
     /**
-     * The amount of instructions within this Chunk.
+     * The amount of instructions within this chunk_t.
      */
     int count;
 
@@ -60,45 +60,45 @@ typedef struct {
     /**
      * run-length encoded line information per instruction.
      */
-    LineArray lines;
+    line_array_t lines;
 
     /**
-     * The constant values referred to by code within this Chunk.
+     * The constant values referred to by code within this chunk_t.
      */
-    ValueArray constants;
-} Chunk;
+    value_array_t constants;
+} chunk_t;
 
 /**
- * Initializes the given Chunk. Must be called before use.
+ * Initializes the given chunk_t. Must be called before use.
  *
- * \param chunk The pointer to the Chunk to be initialized.
+ * \param chunk The pointer to the chunk_t to be initialized.
  */
-void initChunk(Chunk* const chunk);
+void init_chunk(chunk_t* const chunk);
 
 /**
- * Returns the memory claimed by the given Chunk to the heap.
+ * Returns the memory claimed by the given chunk_t to the heap.
  *
- * \param chunk The pointer to the Chunk to be freed.
+ * \param chunk The pointer to the chunk_t to be freed.
  */
-void freeChunk(Chunk* const chunk);
+void free_chunk(chunk_t* const chunk);
 
 /**
- * Stores the instruction in the Chunk and encodes the line information.
+ * Stores the instruction in the chunk_t and encodes the line information.
  *
- * \param chunk The Chunk to write to.
+ * \param chunk The chunk_t to write to.
  * \param byte The instruction to write.
  * \param line The source code line the instruction originates from.
  */
-void writeChunk(Chunk* const chunk, uint8_t byte, int line);
+void write_chunk(chunk_t* const chunk, uint8_t byte, int line);
 
 /**
- * Stores the Value within the Chunk and writes the required instructions
+ * Stores the value_t within the chunk_t and writes the required instructions
  * to retrieve it later.
  *
- * \param chunk The Chunk to write to.
+ * \param chunk The chunk_t to write to.
  * \param value The constant value to store.
  * \param line The source code line the constant was introduced.
  */
-void writeConstant(Chunk* const chunk, Value value, int line);
+void write_constant(chunk_t* const chunk, value_t value, int line);
 
 #endif //HDB_CHUNK_H
