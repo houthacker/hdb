@@ -1,4 +1,4 @@
-#include <stdlib.h>
+#include <stdlib.h> // malloc, free
 #include <errno.h>
 #include <unistd.h> // for sbrk()
 #include <string.h> // for memcpy()
@@ -270,7 +270,6 @@ void* hdb_malloc(size_t size) {
         }
     }
 
-    errno = errno ? errno : ENOMEM;
     abort();
 }
 

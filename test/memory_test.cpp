@@ -2,14 +2,9 @@
 
 extern "C" {
 #include <memory.h>
+
+#include "hdb_tests.h"
 }
-
-#ifndef HDB_TESTING
-#define HDB_TESTING 1
-#endif
-
-#define HDB_CPP_CAST_PTR(type, ptr) \
-    ptr == nullptr ? nullptr : (type*)(static_cast<char*>(ptr) - sizeof(type))
 
 class HdbMemoryFixture : public ::testing::Test {
 protected:
@@ -59,7 +54,7 @@ TEST_F(HdbMemoryFixture, hdb_malloc_zero_bytes) {
 
 TEST_F(HdbMemoryFixture, hdb_malloc_single_byte) {
     void* ptr = hdb_malloc(1);
-    auto block = HDB_CPP_CAST_PTR(hdb_memory_block, ptr);
+    auto block = HDB_CPP_BLOCK_PTR(ptr);
 
     // block size is aligned to next power of two of (size + sizeof(block_t))
     EXPECT_EQ(block->size, 32);
@@ -69,7 +64,7 @@ TEST_F(HdbMemoryFixture, hdb_malloc_single_byte) {
 
 TEST_F(HdbMemoryFixture, hdb_malloc_max) {
     void* ptr = hdb_malloc(heap->current_free - HDB_HEAP_PAGE_SIZE);
-    auto block = HDB_CPP_CAST_PTR(hdb_memory_block_t, ptr);
+    auto block = HDB_CPP_BLOCK_PTR(ptr);
 
     EXPECT_EQ(block->size, heap->current_size);
     EXPECT_EQ(heap->current_free, 0);
@@ -85,7 +80,7 @@ TEST_F(HdbMemoryFixture, hdb_malloc_decreasing_size) {
     for (int i = 5; i > 0; i--) {
         size_t sz = HDB_HEAP_PAGE_SIZE * i;
         void* ptr = hdb_malloc(sz);
-        auto block = HDB_CPP_CAST_PTR(hdb_memory_block_t, ptr);
+        auto block = HDB_CPP_BLOCK_PTR(ptr);
 
         EXPECT_GE(block->size, sz);
         EXPECT_LE(heap->current_free, heap->current_size - sz);
@@ -102,7 +97,7 @@ TEST_F(HdbMemoryFixture, hdb_malloc_increasing_size) {
 
         size_t sz = HDB_HEAP_PAGE_SIZE * i;
         void* ptr = hdb_malloc(sz);
-        auto block = HDB_CPP_CAST_PTR(hdb_memory_block_t, ptr);
+        auto block = HDB_CPP_BLOCK_PTR(ptr);
 
         EXPECT_GE(block->size, sz);
         EXPECT_LE(heap->current_free, heap->current_size - sz);
@@ -122,7 +117,7 @@ TEST_F(HdbMemoryFixture, hdb_malloc_free_block_fragmentation) {
 
     for (auto & i : array) {
         void* ptr = hdb_malloc(1);
-        auto block = HDB_CPP_CAST_PTR(hdb_memory_block_t, ptr);
+        auto block = HDB_CPP_BLOCK_PTR(ptr);
 
         EXPECT_EQ(block->size, 32);
 

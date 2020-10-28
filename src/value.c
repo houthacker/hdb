@@ -1,5 +1,3 @@
-#include <errno.h>
-
 #include "memory.h"
 #include "value.h"
 
@@ -11,8 +9,8 @@ void initValueArray(ValueArray* array) {
 
 void writeValueArray(ValueArray* array, Value value) {
     if (array->capacity < array->count + 1) {
-        array->capacity = GROW_CAPACITY(array->capacity);
-        array->values = GROW_ARRAY(Value, array->values, array->capacity);
+        array->capacity = HDB_GROW_CAPACITY(array->capacity);
+        array->values = HDB_GROW_ARRAY(Value, array->values, array->capacity);
     }
 
     array->values[array->count] = value;
@@ -20,6 +18,6 @@ void writeValueArray(ValueArray* array, Value value) {
 }
 
 void freeValueArray(ValueArray* array) {
-    FREE_ARRAY(Value, array->values);
+    HDB_FREE_ARRAY(Value, array->values);
     initValueArray(array);
 }

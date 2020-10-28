@@ -5,10 +5,6 @@ extern "C" {
     #include <chunk.h>
 }
 
-#ifndef HDB_TESTING
-#define HDB_TESTING 1
-#endif
-
 class HdbChunkFixture : public ::testing::Test {
 protected:
     Chunk* chunk;

@@ -10,13 +10,13 @@ void initLineArray(LineArray* lineArray) {
 }
 
 void freeLineArray(LineArray* lineArray) {
-    FREE_ARRAY(Line, lineArray->lines);
+    HDB_FREE_ARRAY(Line, lineArray->lines);
     initLineArray(lineArray);
 }
 
 static void grow(LineArray* lineArray) {
-    lineArray->capacity = GROW_CAPACITY(lineArray->capacity);
-    lineArray->lines = GROW_ARRAY(Line, lineArray->lines, lineArray->capacity);
+    lineArray->capacity = HDB_GROW_CAPACITY(lineArray->capacity);
+    lineArray->lines = HDB_GROW_ARRAY(Line, lineArray->lines, lineArray->capacity);
 }
 
 static int compareLines(const void* left, const void* right) {

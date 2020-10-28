@@ -5,10 +5,6 @@ extern "C" {
 #include <value.h>
 }
 
-#ifndef HDB_TESTING
-#define HDB_TESTING 1
-#endif
-
 class HdbValueFixture : public ::testing::Test {
 protected:
     ValueArray * values;

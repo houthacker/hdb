@@ -8,6 +8,6 @@ add_executable(hdb ${SOURCE_FILES})
 include_directories(include)
 add_subdirectory(src)
 
-target_link_libraries(hdb src)
+target_link_libraries(hdb hdb_api)
 
 add_subdirectory(test)

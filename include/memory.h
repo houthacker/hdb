@@ -9,13 +9,13 @@
 
 #include "common.h"
 
-#define GROW_CAPACITY(capacity) \
+#define HDB_GROW_CAPACITY(capacity) \
     ((capacity) < 8 ? 8 : (capacity) * 2)
 
-#define GROW_ARRAY(type, pointer, newCount) \
+#define HDB_GROW_ARRAY(type, pointer, newCount) \
     (type*)hdb_reallocate(pointer, sizeof(type) * (newCount))
 
-#define FREE_ARRAY(type, pointer) \
+#define HDB_FREE_ARRAY(type, pointer) \
     hdb_reallocate(pointer, 0)
 
 /**
@@ -39,13 +39,25 @@ typedef struct hdb_memory_block {
     struct hdb_memory_block *prev;
 } hdb_memory_block_t;
 
+/**
+ * Represents an unmodifiable view of the \c hdb_memory_block_t struct.
+ */
 typedef struct hdb_memory_block_view {
 
+    /**
+     * The size of the data, including the size of this struct itself.
+     */
     const size_t size;
 
-    struct hdb_memory_block_view* const next;
+    /**
+     * Pointer to the next block of memory.
+     */
+    struct hdb_memory_block_view *const next;
 
-    struct hdb_memory_block_view* const prev;
+    /**
+     * Pointer to the previous block of memory.
+     */
+    struct hdb_memory_block_view *const prev;
 } hdb_memory_block_view_t;
 
 /**
@@ -84,16 +96,34 @@ typedef struct hdb_heap {
     void* free_ptr;
 } hdb_heap_t;
 
+/**
+ * An unmodifiable view of the \c hdb_heap_t struct.
+ */
 typedef struct hdb_heap_view {
 
+    /**
+     * The minimum amount of available bytes of memory in this heap.
+     */
     const size_t min_size;
 
+    /**
+     * The maximum amount of available bytes of memory in this heap.
+     */
     const size_t max_size;
 
+    /**
+     * The current size in bytes of memory in this heap.
+     */
     const size_t current_size;
 
+    /**
+     * The total amount of memory which is currently free.
+     */
     const size_t current_free;
 
+    /**
+     * A pointer to the head of the list of free blocks of memory.
+     */
     hdb_memory_block_view_t* free_blocks;
 } hdb_heap_view_t;
 
