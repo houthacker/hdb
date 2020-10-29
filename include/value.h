@@ -20,12 +20,12 @@ typedef struct {
     /**
      * The amount of values in this array.
      */
-    int count;
+    int32_t count;
 
     /**
      * The current maximum value array capacity.
      */
-    int capacity;
+    int32_t capacity;
 
     /**
      * The value array.

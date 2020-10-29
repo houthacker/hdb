@@ -1,25 +1,54 @@
 #include <stdio.h> // printf
+#include <signal.h> // signal numbers
 
 #include "os.h"
 #include "common.h"
 #include "debug.h"
 #include "vm.h"
 
+#define HDB_STACK_CUR_IP (vm->stack_top - vm->stack)
+#define HDB_STACK_NEXT_IP (vm->stack_top - vm->stack + 1)
+
 hdb_vm_t* vm;
 
-static void reset_stack() {
-    vm->stack_top = vm->stack;
+static void stack_reset() {
+    vm->stack->top = vm->stack->values;
+}
+
+static void stack_init() {
+    vm->stack = os_malloc(sizeof(hdb_stack_t));
+    vm->stack->count = 0;
+    vm->stack->capacity = 8;
+    vm->stack->values = os_malloc(sizeof(hdb_value_t*) * 8);
+    vm->stack->top = vm->stack->values;
+}
+
+static void stack_grow() {
+    const size_t requested_capacity = vm->stack->capacity * 2;
+
+    // stackoverflow when requesting size > max capacity
+    if (requested_capacity > HDB_STACK_MAX_SIZE) {
+        if (os_raise(SIGSEGV) != 0) {
+            os_abort();
+        }
+    }
+
+    intptr_t sp = vm->stack->top - vm->stack->values;
+    vm->stack->capacity = requested_capacity;
+    vm->stack->values = os_realloc(vm->stack->values, sizeof(hdb_value_t*) * vm->stack->capacity);
+    vm->stack->top = vm->stack->values + sp;
 }
 
 void hdb_vm_init() {
     if (!vm) {
         vm = os_malloc(sizeof(hdb_vm_t));
-        reset_stack();
+        stack_init();
     }
 }
 
 void hdb_vm_free() {
     if (vm) {
+        os_free(vm->stack);
         os_free(vm);
         vm = NULL;
     }
@@ -30,13 +59,23 @@ const hdb_vm_t * hdb_vm() {
 }
 
 void hdb_vm_push(hdb_value_t value) {
-    *vm->stack_top = value;
-    vm->stack_top++;
+    if (vm->stack->count + 1 > vm->stack->capacity) {
+        stack_grow();
+    }
+
+    *vm->stack->top = value;
+    vm->stack->top++;
 }
 
 hdb_value_t hdb_vm_pop() {
-    vm->stack_top--;
-    return *vm->stack_top;
+    if (vm->stack->top == vm->stack->values) {
+        // stack underflow
+        if (os_raise(SIGSEGV) != 0) {
+            os_abort();
+        }
+    }
+
+    return *(--vm->stack->top);
 }
 
 static hdb_interpret_result_t run() {
@@ -52,7 +91,7 @@ static hdb_interpret_result_t run() {
     for (;;) {
 #ifdef DEBUG_TRACE_EXECUTION
         printf("          ");
-        for (hdb_value_t * slot = vm->stack; slot < vm->stack_top; slot++) {
+        for (hdb_value_t * slot = vm->stack->values; slot < vm->stack->top; slot++) {
             printf("[ ");
             hdb_dbg_print_value(*slot);
             printf(" ]");
@@ -72,10 +111,19 @@ static hdb_interpret_result_t run() {
             case OP_SUBTRACT: BINARY_OP(-); break;
             case OP_MULTIPLY: BINARY_OP(*); break;
             case OP_DIVIDE: BINARY_OP(/); break;
-            case OP_NEGATE: (hdb_vm_push(-hdb_vm_pop())); break;
+            case OP_NEGATE:
+            {
+                hdb_value_t *v = (vm->stack->top - 1);
+                *v = -(*v);
+            }
+            break;
             case OP_RETURN:
+#ifdef DEBUG_TRACE_EXECUTION
                 hdb_dbg_print_value(hdb_vm_pop());
                 printf("\n");
+#else
+                hdb_vm_pop();
+#endif
                 return INTERPRET_OK;
         }
     }

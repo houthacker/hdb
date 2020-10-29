@@ -3,7 +3,33 @@
 
 #include "chunk.h"
 
-#define HDB_STACK_MAX 256
+#define HDB_STACK_MAX_SIZE 1024
+
+/**
+ * Representation of the HDB Virtual Machine stack.
+ */
+typedef struct {
+
+    /**
+     * The current amount of elements on the stack.
+     */
+    int32_t count;
+
+    /**
+     * The current maximum capacity.
+     */
+    int32_t capacity;
+
+    /**
+     * The pointer to the current top of the stack
+     */
+    hdb_value_t* top;
+
+    /**
+     * The values residing on the stack.
+     */
+    hdb_value_t* values;
+} hdb_stack_t;
 
 /**
  * A handle to the HDB Virtual Machine
@@ -20,9 +46,10 @@ typedef struct {
      */
     uint8_t* ip;
 
-    hdb_value_t stack[HDB_STACK_MAX];
-
-    hdb_value_t* stack_top;
+    /**
+     * The current stack
+     */
+    hdb_stack_t* stack;
 } hdb_vm_t;
 
 /**
