@@ -76,11 +76,14 @@ typedef enum {
 
 /**
  * Initializes the HDB Virtual Machine.
+ *
+ * \param heap_min_size The minimum heap size in bytes.
+ * \param heap_max_size The maximum heap size in bytes.
  */
-void hdb_vm_init();
+void hdb_vm_init(size_t heap_min_size, size_t heap_max_size);
 
 /**
- * Destroys the HDB Virtual Machine.
+ * Stops and destroys the HDB Virtual Machine.
  */
 void hdb_vm_free();
 
@@ -92,10 +95,10 @@ const hdb_vm_t* hdb_vm();
 /**
  * Interprets the byte code in the given chunk and returns the result state.
  *
- * \param chunk The byte code to execute.
+ * \param source The source code to interpret.
  * \return The result state.
  */
-hdb_interpret_result_t hdb_vm_interpret(hdb_chunk_t *chunk);
+hdb_interpret_result_t hdb_vm_interpret(const char* source);
 
 void hdb_vm_push(hdb_value_t value);
 

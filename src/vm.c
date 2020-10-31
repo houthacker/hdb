@@ -1,10 +1,12 @@
 #include <stdio.h> // printf
 #include <signal.h> // signal numbers
 
+#include "memory.h"
 #include "os.h"
 #include "common.h"
 #include "debug.h"
 #include "vm.h"
+#include "compiler.h"
 
 #define HDB_STACK_CUR_IP (vm->stack_top - vm->stack)
 #define HDB_STACK_NEXT_IP (vm->stack_top - vm->stack + 1)
@@ -16,10 +18,12 @@ static void stack_reset() {
 }
 
 static void stack_init() {
-    vm->stack = os_malloc(sizeof(hdb_stack_t));
+    hdb_stack_t stack;
+
+    vm->stack = &stack; // os_malloc(sizeof(hdb_stack_t));
     vm->stack->count = 0;
     vm->stack->capacity = 8;
-    vm->stack->values = os_malloc(sizeof(hdb_value_t*) * 8);
+    //vm->stack->values = os_malloc(sizeof(hdb_value_t*) * 8);
     vm->stack->top = vm->stack->values;
 }
 
@@ -33,24 +37,31 @@ static void stack_grow() {
         }
     }
 
-    intptr_t sp = vm->stack->top - vm->stack->values;
+    //intptr_t sp = vm->stack->top - vm->stack->values;
     vm->stack->capacity = requested_capacity;
-    vm->stack->values = os_realloc(vm->stack->values, sizeof(hdb_value_t*) * vm->stack->capacity);
-    vm->stack->top = vm->stack->values + sp;
+    //vm->stack->values = os_realloc(vm->stack->values, sizeof(hdb_value_t*) * vm->stack->capacity);
+    //vm->stack->top = vm->stack->values + sp;
 }
 
-void hdb_vm_init() {
+void hdb_vm_init(size_t heap_min_size, size_t heap_max_size) {
     if (!vm) {
+        hdb_heap_init(heap_min_size, heap_max_size);
+
         vm = os_malloc(sizeof(hdb_vm_t));
         stack_init();
+
+        hdb_compiler_init();
     }
 }
 
 void hdb_vm_free() {
     if (vm) {
-        os_free(vm->stack);
+        hdb_compiler_free();
+
         os_free(vm);
         vm = NULL;
+
+        hdb_heap_free();
     }
 }
 
@@ -133,13 +144,7 @@ static hdb_interpret_result_t run() {
 #undef BINARY_OP
 }
 
-hdb_interpret_result_t hdb_vm_interpret(hdb_chunk_t *chunk) {
-    if (vm && chunk) {
-        vm->chunk = chunk;
-        vm->ip = chunk->code;
-
-        return run();
-    }
-
-    return INTERPRET_RUNTIME_ERROR;
+hdb_interpret_result_t hdb_vm_interpret(const char* source) {
+    hdb_compiler_compile(source);
+    return INTERPRET_OK;
 }
