@@ -8,22 +8,16 @@ extern "C" {
 #include <chunk.h>
 }
 
-class DISABLED_HdbVMFixture : public ::testing::Test {
+class HdbVMFixture : public ::testing::Test {
 protected:
     const hdb_vm_t *vm;
 
-    hdb_chunk_t* chunk;
-
     virtual void SetUp() {
-        hdb_vm_init(2546, 512);
-        chunk = (hdb_chunk_t*)hdb_malloc(sizeof(hdb_chunk_t));
-        hdb_chunk_init(chunk);
-
+        hdb_vm_init(256, 512);
         vm = hdb_vm();
     }
 
     virtual void TearDown() {
-        hdb_free(chunk);
         hdb_vm_free();
     }
 
@@ -42,118 +36,75 @@ protected:
     }
 };
 
-TEST_F(DISABLED_HdbVMFixture, hdb_init_vm_twice) {
+TEST_F(HdbVMFixture, hdb_init_vm_twice) {
     hdb_vm_init(256, 512);
 }
 
-TEST_F(DISABLED_HdbVMFixture, hdb_negate_value) {
-    hdb_chunk_write_constant(chunk, 1.337, 123);
-    hdb_chunk_write(chunk, OP_NEGATE, 123);
-    hdb_chunk_write(chunk, OP_RETURN, 123);
+TEST_F(HdbVMFixture, hdb_validate_precedence) {
+    const char* source = "(-1 + 2) * 3 - -4";
+    hdb_interpret_result_t result = hdb_vm_interpret(source);
 
-    // todo hdb_vm_interpret("select -1.337");
-
-    hdb_value_t from_stack = *vm->stack->top;
-    EXPECT_EQ(from_stack, -1.337);
+    EXPECT_EQ(result, INTERPRET_OK);
+    EXPECT_EQ(*vm->stack->top, 7);
 }
 
-TEST_F(DISABLED_HdbVMFixture, hdb_add_value) {
-    hdb_chunk_write_constant(chunk, 1.337, 123);
-    hdb_chunk_write_constant(chunk, 0.663, 123);
-    hdb_chunk_write(chunk, OP_ADD, 123);
+TEST_F(HdbVMFixture, hdb_negate_value) {
+    const char* source = "-1.337";
+    hdb_interpret_result_t result = hdb_vm_interpret(source);
 
-    hdb_chunk_write(chunk, OP_RETURN, 123);
-
-    // todo hdb_vm_interpret(chunk);
-
-    hdb_value_t from_stack = *vm->stack->top;
-    EXPECT_EQ(from_stack, 1.337 + 0.663);
+    EXPECT_EQ(result, INTERPRET_OK);
+    EXPECT_EQ(*vm->stack->top, -1.337);
 }
 
-TEST_F(DISABLED_HdbVMFixture, hdb_subtract_value) {
-    hdb_chunk_write_constant(chunk, 1.337, 123);
-    hdb_chunk_write_constant(chunk, 0.663, 123);
-    hdb_chunk_write(chunk, OP_SUBTRACT, 123);
+TEST_F(HdbVMFixture, hdb_add_value) {
+    const char* source = "1.337 + 0.663";
+    hdb_interpret_result_t result = hdb_vm_interpret(source);
 
-    hdb_chunk_write(chunk, OP_RETURN, 123);
-
-    // todo hdb_vm_interpret(chunk);
-
-    hdb_value_t from_stack = *vm->stack->top;
-    EXPECT_EQ(from_stack, 1.337 - 0.663);
+    EXPECT_EQ(result, INTERPRET_OK);
+    EXPECT_EQ(*vm->stack->top, 1.337 + 0.663);
 }
 
-TEST_F(DISABLED_HdbVMFixture, hdb_multiply_value) {
-    hdb_chunk_write_constant(chunk, 1.337, 123);
-    hdb_chunk_write_constant(chunk, 0.663, 123);
-    hdb_chunk_write(chunk, OP_MULTIPLY, 123);
+TEST_F(HdbVMFixture, hdb_subtract_value) {
+    const char* source = "1.337 - 0.663";
+    hdb_interpret_result_t result = hdb_vm_interpret(source);
 
-    hdb_chunk_write(chunk, OP_RETURN, 123);
-
-    // todo hdb_vm_interpret(chunk);
-
-    hdb_value_t from_stack = *vm->stack->top;
-    EXPECT_EQ(from_stack, 0.886431);
+    EXPECT_EQ(result, INTERPRET_OK);
+    EXPECT_EQ(*vm->stack->top, 1.337 - 0.663);
 }
 
-TEST_F(DISABLED_HdbVMFixture, hdb_divide_value) {
-    hdb_chunk_write_constant(chunk, 1.337, 123);
-    hdb_chunk_write_constant(chunk, 0.663, 123);
-    hdb_chunk_write(chunk, OP_DIVIDE, 123);
+TEST_F(HdbVMFixture, hdb_multiply_value) {
+    const char* source = "1.337 * 0.663";
+    hdb_interpret_result_t result = hdb_vm_interpret(source);
 
-    hdb_chunk_write(chunk, OP_RETURN, 123);
-
-    // todo hdb_vm_interpret(chunk);
-
-    hdb_value_t from_stack = *vm->stack->top;
-    EXPECT_EQ(from_stack, 1.337 / 0.663);
+    EXPECT_EQ(result, INTERPRET_OK);
+    EXPECT_EQ(*vm->stack->top, 1.337 * 0.663);
 }
 
-TEST_F(DISABLED_HdbVMFixture, hdb_binary_op_mix) {
-    hdb_chunk_write_constant(chunk, 1.337, 123);
-    hdb_chunk_write_constant(chunk, 0.663, 123);
-    hdb_chunk_write(chunk, OP_ADD, 123);
+TEST_F(HdbVMFixture, hdb_divide_value) {
+    const char* source = "1.337 / 0.663";
+    hdb_interpret_result_t result = hdb_vm_interpret(source);
 
-    hdb_chunk_write_constant(chunk, 100, 123);
-    hdb_chunk_write(chunk, OP_DIVIDE, 123);
-    hdb_chunk_write(chunk, OP_NEGATE, 123);
-
-    hdb_chunk_write(chunk, OP_RETURN, 123);
-
-    // todo hdb_vm_interpret(chunk);
-
-    hdb_value_t from_stack = *vm->stack->top;
-    EXPECT_EQ(from_stack, -((1.337 + 0.663) / 100));
+    EXPECT_EQ(result, INTERPRET_OK);
+    EXPECT_EQ(*vm->stack->top, 1.337 / 0.663);
 }
 
-TEST_F(DISABLED_HdbVMFixture, hdb_simple_calculation) {
-    // 4 - 3 * -2
-    hdb_chunk_write_constant(chunk, 4, 123);
-    hdb_chunk_write_constant(chunk, 3, 123);
-    hdb_chunk_write_constant(chunk, 2, 123);
-    hdb_chunk_write(chunk, OP_NEGATE, 123);
-    hdb_chunk_write(chunk, OP_MULTIPLY, 123);
-    hdb_chunk_write(chunk, OP_SUBTRACT, 123);
-    hdb_chunk_write(chunk, OP_RETURN, 123);
+TEST_F(HdbVMFixture, hdb_binary_op_mix) {
+    const char* source = "-((1.337 + 0.663) / 100)";
+    hdb_interpret_result_t result = hdb_vm_interpret(source);
 
-    // todo hdb_vm_interpret(chunk);
-
-    hdb_value_t from_stack = *vm->stack->top;
-    EXPECT_EQ(from_stack, 4 - 3 * -2 /* 10 */ );
+    EXPECT_EQ(result, INTERPRET_OK);
+    EXPECT_EQ(*vm->stack->top, -((1.337 + 0.663) / 100));
 }
 
-TEST_F(DISABLED_HdbVMFixture, hdb_vm_interpretation_performance) {
-    // Only test this when DEBUG_TRACE_EXECUTION is off!
+TEST_F(HdbVMFixture, DISABLED_hdb_vm_interpretation_performance) {
+    // Only run this test when DEBUG_TRACE_EXECUTION is off!
 
-    hdb_chunk_write_constant(chunk, 1.337, 123);
-    hdb_chunk_write(chunk, OP_NEGATE, 123);
-    hdb_chunk_write(chunk, OP_RETURN, 123);
-
-    int32_t sz = 200000000;
+    const char* source = "(-1 + 2) * 3 - -4";
+    int32_t sz = 20000000;
     timespec start, finish;
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
     for (int32_t i = 0; i < sz; i++) {
-        // todo hdb_vm_interpret(chunk);
+        hdb_vm_interpret(source);
     }
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &finish);
 

@@ -6,6 +6,11 @@
 #include <stdint.h>
 
 /**
+ *
+ */
+#define DEBUG_PRINT_CODE
+
+/**
  * Causes the debugger to print trace information (slow!)
  */
 #define DEBUG_TRACE_EXECUTION

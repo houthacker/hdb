@@ -13,17 +13,11 @@
 
 hdb_vm_t* vm;
 
-static void stack_reset() {
-    vm->stack->top = vm->stack->values;
-}
-
 static void stack_init() {
-    hdb_stack_t stack;
-
-    vm->stack = &stack; // os_malloc(sizeof(hdb_stack_t));
+    vm->stack = os_malloc(sizeof(hdb_stack_t));
     vm->stack->count = 0;
     vm->stack->capacity = 8;
-    //vm->stack->values = os_malloc(sizeof(hdb_value_t*) * 8);
+    vm->stack->values = os_malloc(sizeof(hdb_value_t*) * vm->stack->capacity);
     vm->stack->top = vm->stack->values;
 }
 
@@ -37,10 +31,10 @@ static void stack_grow() {
         }
     }
 
-    //intptr_t sp = vm->stack->top - vm->stack->values;
+    intptr_t sp = vm->stack->top - vm->stack->values;
     vm->stack->capacity = requested_capacity;
-    //vm->stack->values = os_realloc(vm->stack->values, sizeof(hdb_value_t*) * vm->stack->capacity);
-    //vm->stack->top = vm->stack->values + sp;
+    vm->stack->values = os_realloc(vm->stack->values, sizeof(hdb_value_t*) * vm->stack->capacity);
+    vm->stack->top = vm->stack->values + sp;
 }
 
 void hdb_vm_init(size_t heap_min_size, size_t heap_max_size) {
@@ -58,6 +52,7 @@ void hdb_vm_free() {
     if (vm) {
         hdb_compiler_free();
 
+        os_free(vm->stack);
         os_free(vm);
         vm = NULL;
 
@@ -145,6 +140,18 @@ static hdb_interpret_result_t run() {
 }
 
 hdb_interpret_result_t hdb_vm_interpret(const char* source) {
-    hdb_compiler_compile(source);
-    return INTERPRET_OK;
+    hdb_chunk_t chunk;
+    hdb_chunk_init(&chunk);
+
+    if (!hdb_compiler_compile(source, &chunk)) {
+        return INTERPRET_COMPILE_ERROR;
+    }
+
+    vm->chunk = &chunk;
+    vm->ip = vm->chunk->code;
+
+    hdb_interpret_result_t result = run();
+
+    hdb_chunk_free(&chunk);
+    return result;
 }

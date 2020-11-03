@@ -36,6 +36,8 @@ TEST_F(HdbChunkFixture, increments_count_correctly) {
     EXPECT_EQ(chunk->count, 2);
     EXPECT_EQ(chunk->constants.count, 1);
     EXPECT_EQ(chunk->constants.values[0], 1.2);
+    EXPECT_EQ(chunk->code[0], OP_CONSTANT);
+    EXPECT_EQ(chunk->code[1], 0);
 
     hdb_chunk_write(chunk, OP_RETURN, 123);
     EXPECT_EQ(chunk->count, 3);
