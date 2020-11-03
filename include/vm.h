@@ -3,7 +3,8 @@
 
 #include "chunk.h"
 
-#define HDB_STACK_MAX_SIZE 1024
+// Max stack size is 4MB (a pointer to a hdb_value_t uses 8 bytes)
+#define HDB_STACK_MAX_SIZE 524288
 
 /**
  * Representation of the HDB Virtual Machine stack.

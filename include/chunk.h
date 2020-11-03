@@ -67,6 +67,11 @@ typedef struct {
     int32_t capacity;
 
     /**
+     * The maximum amount of stack slots used by this  chunk of byte code.
+     */
+    uint8_t stack_high_water_mark;
+
+    /**
      * The actual byte code instructions.
      */
     uint8_t* code;

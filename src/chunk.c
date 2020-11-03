@@ -5,6 +5,7 @@
 void hdb_chunk_init(hdb_chunk_t *chunk) {
     chunk->count = 0;
     chunk->capacity = 0;
+    chunk->stack_high_water_mark = 0;
     chunk->code = NULL;
     hdb_line_array_init(&chunk->lines);
     hdb_init_value_array(&chunk->constants);

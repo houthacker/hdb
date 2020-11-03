@@ -97,7 +97,7 @@ TEST_F(HdbVMFixture, hdb_binary_op_mix) {
 }
 
 TEST_F(HdbVMFixture, DISABLED_hdb_vm_interpretation_performance) {
-    // Only run this test when DEBUG_TRACE_EXECUTION is off!
+    // Only run this test when DEBUG_TRACE_EXECUTION and DEBUG_PRINT_CODE are off! see common.h
 
     const char* source = "(-1 + 2) * 3 - -4";
     int32_t sz = 20000000;
@@ -110,5 +110,5 @@ TEST_F(HdbVMFixture, DISABLED_hdb_vm_interpretation_performance) {
 
     timespec d = diff(start, finish);
     ulong ns = (d.tv_sec * 1000000000 + d.tv_nsec);
-    printf("Duration per op: %luns\n", ns / sz);
+    printf("Duration per chunk: %luns\n", ns / sz);
 }

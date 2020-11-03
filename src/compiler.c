@@ -42,6 +42,16 @@ hdb_parser_t parser;
 
 hdb_chunk_t* compiling_chunk;
 
+uint8_t stack_high_water_mark;
+uint8_t stack_size;
+
+#define HDB_DECREASE_STACK_SIZE(amount) stack_size -= amount;
+
+#define HDB_INCREASE_STACK_SIZE(amount) \
+    stack_size += amount;                \
+    stack_high_water_mark = stack_size > stack_high_water_mark ? stack_size : stack_high_water_mark;
+
+
 static hdb_chunk_t* current_chunk(void) {
     return compiling_chunk;
 }
@@ -117,6 +127,9 @@ static void emit_return(void) {
 
 static void emit_constant(hdb_value_t value) {
     hdb_chunk_write_constant(current_chunk(), value, parser.current.line);
+
+    // A constant will get pushed on the stack, using a single slot.
+    HDB_INCREASE_STACK_SIZE(1);
 }
 
 static void end_compiler(void) {
@@ -141,12 +154,13 @@ static void binary(void) {
     hdb_parse_rule_t* rule = get_rule(operator_type);
     parse_precedence((hdb_precedence_t)(rule->precedence + 1));
 
-    // Emit the operator instruction
+    // Emit the operator instruction.
+    // Binary operators first pop() two values off the stack, and push() the result back on to it.
     switch(operator_type) {
-        case TOKEN_PLUS:            emit_byte(OP_ADD); break;
-        case TOKEN_MINUS:           emit_byte(OP_SUBTRACT); break;
-        case TOKEN_ASTERISK:        emit_byte(OP_MULTIPLY); break;
-        case TOKEN_FORWARD_SLASH:   emit_byte(OP_DIVIDE); break;
+        case TOKEN_PLUS:            emit_byte(OP_ADD); HDB_DECREASE_STACK_SIZE(2); HDB_INCREASE_STACK_SIZE(1); break;
+        case TOKEN_MINUS:           emit_byte(OP_SUBTRACT); HDB_DECREASE_STACK_SIZE(2); HDB_INCREASE_STACK_SIZE(1); break;
+        case TOKEN_ASTERISK:        emit_byte(OP_MULTIPLY); HDB_DECREASE_STACK_SIZE(2); HDB_INCREASE_STACK_SIZE(1); break;
+        case TOKEN_FORWARD_SLASH:   emit_byte(OP_DIVIDE); HDB_DECREASE_STACK_SIZE(2); HDB_INCREASE_STACK_SIZE(1); break;
         default:
             return; // unreachable
     }
@@ -171,9 +185,6 @@ static void unary(void) {
     // Emit the operator instruction.
     switch(operator_type) {
         case TOKEN_MINUS:           emit_byte(OP_NEGATE); break;
-        case TOKEN_PLUS:            emit_byte(OP_ADD); break;
-        case TOKEN_ASTERISK:        emit_byte(OP_MULTIPLY); break;
-        case TOKEN_FORWARD_SLASH:   emit_byte(OP_DIVIDE); break;
         default:
             return; // unreachable
     }
@@ -537,10 +548,16 @@ static void expression(void) {
 }
 
 bool hdb_compiler_compile(const char* source, hdb_chunk_t* chunk) {
+    stack_high_water_mark = stack_size = 0;
+
     hdb_scanner_init(source);
     compiling_chunk = chunk;
     advance();
     expression();
+
+    // Add the high water mark of the stack to the chunk. This allows for
+    // less array bounds tests when executing the code.
+    compiling_chunk->stack_high_water_mark = stack_high_water_mark;
     consume(TOKEN_EOF, "Expect end of expression.");
     end_compiler();
     return !parser.had_error;

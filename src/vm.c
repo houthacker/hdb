@@ -21,8 +21,8 @@ static void stack_init() {
     vm->stack->top = vm->stack->values;
 }
 
-static void stack_grow() {
-    const size_t requested_capacity = vm->stack->capacity * 2;
+static void stack_grow(uint8_t factor) {
+    const size_t requested_capacity = vm->stack->capacity * factor;
 
     // stackoverflow when requesting size > max capacity
     if (requested_capacity > HDB_STACK_MAX_SIZE) {
@@ -65,28 +65,20 @@ const hdb_vm_t * hdb_vm() {
 }
 
 void hdb_vm_push(hdb_value_t value) {
-    if (vm->stack->count + 1 > vm->stack->capacity) {
-        stack_grow();
-    }
-
+    // Stack doesn't need to grow here because
+    // the stack size is set right before executing a chunk of byte code.
     *vm->stack->top = value;
     vm->stack->top++;
 }
 
 hdb_value_t hdb_vm_pop() {
-    if (vm->stack->top == vm->stack->values) {
-        // stack underflow
-        if (os_raise(SIGSEGV) != 0) {
-            os_abort();
-        }
-    }
-
+    // do not protect against a stack underflow, this will SIGSEGV on its own.
     return *(--vm->stack->top);
 }
 
 static hdb_interpret_result_t run() {
 #define READ_BYTE() (*vm->ip++)
-#define READ_CONSTANT(offset) (hdb_chunk_read_constant(vm->chunk, vm->ip++))
+#define READ_CONSTANT() (hdb_chunk_read_constant(vm->chunk, vm->ip++))
 #define BINARY_OP(op) \
     do {              \
         double right = hdb_vm_pop(); \
@@ -139,6 +131,22 @@ static hdb_interpret_result_t run() {
 #undef BINARY_OP
 }
 
+// Increase stack size if required
+static void ensure_stack_size(hdb_chunk_t chunk) {
+    int32_t stack_free = vm->stack->capacity - vm->stack->count;
+    if (stack_free >= chunk.stack_high_water_mark) {
+        return;
+    }
+
+    uint8_t factor = 1;
+    int32_t min_free_required = chunk.stack_high_water_mark;
+    while((vm->stack->capacity * factor) - vm->stack->count < min_free_required) {
+        factor *= 2;
+    }
+
+    stack_grow(factor);
+}
+
 hdb_interpret_result_t hdb_vm_interpret(const char* source) {
     hdb_chunk_t chunk;
     hdb_chunk_init(&chunk);
@@ -150,6 +158,7 @@ hdb_interpret_result_t hdb_vm_interpret(const char* source) {
     vm->chunk = &chunk;
     vm->ip = vm->chunk->code;
 
+    ensure_stack_size(chunk);
     hdb_interpret_result_t result = run();
 
     hdb_chunk_free(&chunk);
