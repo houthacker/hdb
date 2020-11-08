@@ -45,7 +45,7 @@ TEST_F(HdbVMFixture, hdb_validate_precedence) {
     hdb_interpret_result_t result = hdb_vm_interpret(source);
 
     EXPECT_EQ(result, INTERPRET_OK);
-    EXPECT_EQ(vm->stack[vm->stack_count], 7);
+    EXPECT_EQ(AS_NUMBER(vm->stack[vm->stack_count]), 7);
 }
 
 TEST_F(HdbVMFixture, hdb_negate_value) {
@@ -53,7 +53,7 @@ TEST_F(HdbVMFixture, hdb_negate_value) {
     hdb_interpret_result_t result = hdb_vm_interpret(source);
 
     EXPECT_EQ(result, INTERPRET_OK);
-    EXPECT_EQ(vm->stack[vm->stack_count], -1.337);
+    EXPECT_EQ(AS_NUMBER(vm->stack[vm->stack_count]), -1.337);
 }
 
 TEST_F(HdbVMFixture, hdb_add_value) {
@@ -61,7 +61,7 @@ TEST_F(HdbVMFixture, hdb_add_value) {
     hdb_interpret_result_t result = hdb_vm_interpret(source);
 
     EXPECT_EQ(result, INTERPRET_OK);
-    EXPECT_EQ(vm->stack[vm->stack_count], 1.337 + 0.663);
+    EXPECT_EQ(AS_NUMBER(vm->stack[vm->stack_count]), 1.337 + 0.663);
 }
 
 TEST_F(HdbVMFixture, hdb_subtract_value) {
@@ -69,7 +69,7 @@ TEST_F(HdbVMFixture, hdb_subtract_value) {
     hdb_interpret_result_t result = hdb_vm_interpret(source);
 
     EXPECT_EQ(result, INTERPRET_OK);
-    EXPECT_EQ(vm->stack[vm->stack_count], 1.337 - 0.663);
+    EXPECT_EQ(AS_NUMBER(vm->stack[vm->stack_count]), 1.337 - 0.663);
 }
 
 TEST_F(HdbVMFixture, hdb_multiply_value) {
@@ -77,7 +77,7 @@ TEST_F(HdbVMFixture, hdb_multiply_value) {
     hdb_interpret_result_t result = hdb_vm_interpret(source);
 
     EXPECT_EQ(result, INTERPRET_OK);
-    EXPECT_EQ(vm->stack[vm->stack_count], 1.337 * 0.663);
+    EXPECT_EQ(AS_NUMBER(vm->stack[vm->stack_count]), 1.337 * 0.663);
 }
 
 TEST_F(HdbVMFixture, hdb_divide_value) {
@@ -85,7 +85,7 @@ TEST_F(HdbVMFixture, hdb_divide_value) {
     hdb_interpret_result_t result = hdb_vm_interpret(source);
 
     EXPECT_EQ(result, INTERPRET_OK);
-    EXPECT_EQ(vm->stack[vm->stack_count], 1.337 / 0.663);
+    EXPECT_EQ(AS_NUMBER(vm->stack[vm->stack_count]), 1.337 / 0.663);
 }
 
 TEST_F(HdbVMFixture, hdb_binary_op_mix) {
@@ -93,7 +93,7 @@ TEST_F(HdbVMFixture, hdb_binary_op_mix) {
     hdb_interpret_result_t result = hdb_vm_interpret(source);
 
     EXPECT_EQ(result, INTERPRET_OK);
-    EXPECT_EQ(vm->stack[vm->stack_count], -((1.337 + 0.663) / 100));
+    EXPECT_EQ(AS_NUMBER(vm->stack[vm->stack_count]), -((1.337 + 0.663) / 100));
 }
 
 TEST_F(HdbVMFixture, DISABLED_hdb_vm_interpretation_performance) {

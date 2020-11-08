@@ -36,7 +36,7 @@ static hdb_line_t create_line(int32_t line) {
     return l;
 }
 
-int hdb_line_encode(hdb_line_array_t* array, int32_t line) {
+int32_t hdb_line_encode(hdb_line_array_t* array, int32_t line) {
     if (array->count == 0 || array->capacity < array->count + 1) {
         grow(array);
     }
@@ -75,7 +75,7 @@ int hdb_line_encode(hdb_line_array_t* array, int32_t line) {
     }
 }
 
-int hdb_line_decode(hdb_line_array_t* array, int32_t instruction_index) {
+int32_t hdb_line_decode(hdb_line_array_t* array, int32_t instruction_index) {
     if (instruction_index < 0) {
         return -1;
     }

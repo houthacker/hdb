@@ -75,5 +75,5 @@ int hdb_dbg_disassemble_instruction(hdb_chunk_t* chunk, int32_t offset) {
 }
 
 void hdb_dbg_print_value(hdb_value_t value) {
-    printf("%g", value);
+    printf("%g", AS_NUMBER(value));
 }

@@ -32,10 +32,10 @@ TEST_F(HdbChunkFixture, initializes_correctly) {
 }
 
 TEST_F(HdbChunkFixture, increments_count_correctly) {
-    hdb_chunk_write_constant(chunk, 1.2, 123);
+    hdb_chunk_write_constant(chunk, NUMBER_VAL(1.2), 123);
     EXPECT_EQ(chunk->count, 2);
     EXPECT_EQ(chunk->constants.count, 1);
-    EXPECT_EQ(chunk->constants.values[0], 1.2);
+    EXPECT_EQ(AS_NUMBER(chunk->constants.values[0]), 1.2);
     EXPECT_EQ(chunk->code[0], OP_CONSTANT);
     EXPECT_EQ(chunk->code[1], 0);
 
@@ -46,13 +46,13 @@ TEST_F(HdbChunkFixture, increments_count_correctly) {
 
 TEST_F(HdbChunkFixture, write_large_constant) {
     for (int i = 0; i < 257; i++) {
-        hdb_chunk_write_constant(chunk, 1.23, i + 1);
+        hdb_chunk_write_constant(chunk, NUMBER_VAL(1.23), i + 1);
     }
 
     EXPECT_EQ(chunk->count, 516);
     EXPECT_EQ(chunk->constants.count, 257);
-    EXPECT_EQ(chunk->constants.values[0], 1.23);
-    EXPECT_EQ(chunk->constants.values[256], 1.23);
+    EXPECT_EQ(AS_NUMBER(chunk->constants.values[0]), 1.23);
+    EXPECT_EQ(AS_NUMBER(chunk->constants.values[256]), 1.23);
 
 }
 

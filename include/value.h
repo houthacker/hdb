@@ -7,10 +7,33 @@
 #ifndef HDB_VALUE_H
 #define HDB_VALUE_H
 
+typedef enum {
+    VAL_BOOL,
+    VAL_NIL,
+    VAL_NUMBER
+} hdb_value_type_t;
+
 /**
- * Type definition for the (only) supported value type in hdb
+ * Type definition for the supported value types in hdb
  */
-typedef double hdb_value_t;
+typedef struct {
+    hdb_value_type_t type;
+    union {
+        bool boolean;
+        double number;
+    } as;
+} hdb_value_t;
+
+#define IS_BOOL(value)      ((value).type == VAL_BOOL)
+#define IS_NIL(value)       ((value).type == VAL_NIL)
+#define IS_NUMBER(value)    ((value).type == VAL_NUMBER)
+
+#define AS_BOOL(value)      ((value).as.boolean)
+#define AS_NUMBER(value)    ((value).as.number)
+
+#define BOOL_VAL(value)     ((hdb_value_t){VAL_BOOL,    {.boolean   = value}})
+#define NIL_VAL             ((hdb_value_t){VAL_NIL,     {.number    = 0}})
+#define NUMBER_VAL(value)   ((hdb_value_t){VAL_NUMBER,  {.number    = value}})
 
 /**
  * Structure to store multiple values.

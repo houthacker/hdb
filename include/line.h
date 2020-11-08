@@ -67,7 +67,7 @@ void hdb_line_array_free(hdb_line_array_t* array);
  * \param line The source code line number.
  * \return The new size of the line array.
  */
-int hdb_line_encode(hdb_line_array_t* array, int32_t line);
+int32_t hdb_line_encode(hdb_line_array_t* array, int32_t line);
 
 /**
  * Decodes the line number at the given instruction index.
@@ -76,6 +76,6 @@ int hdb_line_encode(hdb_line_array_t* array, int32_t line);
  * \param instruction_index The index of the related bytecode instruction.
  * \return The line number, or -1 if no such line exists.
  */
-int hdb_line_decode(hdb_line_array_t* array, int32_t instruction_index);
+int32_t hdb_line_decode(hdb_line_array_t* array, int32_t instruction_index);
 
 #endif //HDB_LINE_H

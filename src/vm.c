@@ -1,5 +1,6 @@
 #include <stdio.h> // printf
 #include <signal.h> // signal numbers
+#include <stdarg.h> // va_list
 
 #include "memory.h"
 #include "os.h"
@@ -8,14 +9,28 @@
 #include "vm.h"
 #include "compiler.h"
 
-#define HDB_STACK_CUR_IP (vm->stack_top - vm->stack)
-#define HDB_STACK_NEXT_IP (vm->stack_top - vm->stack + 1)
-
 hdb_vm_t* vm;
 
-static void stack_init() {
+static void stack_init(void) {
     vm->stack = os_malloc(sizeof(hdb_value_t*) * vm->stack_capacity);
     vm->stack_count = 0;
+}
+
+static void stack_reset(void) {
+    vm->stack_count = 0;
+}
+
+static void runtime_error(const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    vfprintf(stderr, format, args);
+    va_end(args);
+
+    uint8_t instruction = vm->ip - vm->chunk->code - 1;
+    int32_t line = hdb_line_decode(&vm->chunk->lines, instruction);
+    fprintf(stderr, "[line %d] in script\n", line);
+
+    stack_reset();
 }
 
 static void stack_grow(uint8_t factor) {
@@ -43,7 +58,7 @@ void hdb_vm_init(size_t heap_min_size, size_t heap_max_size) {
     }
 }
 
-void hdb_vm_free() {
+void hdb_vm_free(void) {
     if (vm) {
         hdb_compiler_free();
 
@@ -55,7 +70,7 @@ void hdb_vm_free() {
     }
 }
 
-const hdb_vm_t * hdb_vm() {
+const hdb_vm_t * hdb_vm(void) {
     return vm;
 }
 
@@ -66,20 +81,29 @@ void hdb_vm_stack_push(hdb_value_t value) {
     vm->stack_count++;
 }
 
-hdb_value_t hdb_vm_stack_pop() {
+hdb_value_t hdb_vm_stack_pop(void) {
     // do not protect against a stack underflow, this will SIGSEGV on its own.
     vm->stack_count--;
     return *(vm->stack + vm->stack_count);
 }
 
-static hdb_interpret_result_t run() {
+static hdb_value_t stack_peek(int32_t distance) {
+    // todo prevent stack underflow
+    return *(vm->stack + vm->stack_count - 1 - distance);
+}
+
+static hdb_interpret_result_t run(void) {
 #define READ_BYTE() (*vm->ip++)
 #define READ_CONSTANT() (hdb_chunk_read_constant(vm->chunk, vm->ip++))
-#define BINARY_OP(op) \
+#define BINARY_OP(value_type, op) \
     do {              \
-        double right = hdb_vm_stack_pop(); \
-        double left  = hdb_vm_stack_pop(); \
-        hdb_vm_stack_push(left op right);  \
+        if (!IS_NUMBER(stack_peek(0)) || !IS_NUMBER(stack_peek(1))) { \
+            runtime_error("Operands must be numbers.");   \
+            return INTERPRET_RUNTIME_ERROR;               \
+        } \
+        double right = AS_NUMBER(hdb_vm_stack_pop()); \
+        double left  = AS_NUMBER(hdb_vm_stack_pop()); \
+        hdb_vm_stack_push(value_type(left op right));  \
     } while (false)
 
     for (;;) {
@@ -102,14 +126,19 @@ static hdb_interpret_result_t run() {
                 hdb_vm_stack_push(value);
                 break;
             }
-            case OP_ADD: BINARY_OP(+); break;
-            case OP_SUBTRACT: BINARY_OP(-); break;
-            case OP_MULTIPLY: BINARY_OP(*); break;
-            case OP_DIVIDE: BINARY_OP(/); break;
+            case OP_ADD:        BINARY_OP(NUMBER_VAL, +); break;
+            case OP_SUBTRACT:   BINARY_OP(NUMBER_VAL, -); break;
+            case OP_MULTIPLY:   BINARY_OP(NUMBER_VAL, *); break;
+            case OP_DIVIDE:     BINARY_OP(NUMBER_VAL, /); break;
             case OP_NEGATE:
             {
+                if (!IS_NUMBER(stack_peek(0))) {
+                    runtime_error("Operand must be a number.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+
                 hdb_value_t *v = &vm->stack[vm->stack_count] - 1;
-                *v = -(*v);
+                v->as.number = -v->as.number;
             }
             break;
             case OP_RETURN:
