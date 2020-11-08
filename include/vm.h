@@ -22,11 +22,6 @@ typedef struct {
     int32_t capacity;
 
     /**
-     * The pointer to the current top of the stack
-     */
-    hdb_value_t* top;
-
-    /**
      * The values residing on the stack.
      */
     hdb_value_t* values;
@@ -48,9 +43,19 @@ typedef struct {
     uint8_t* ip;
 
     /**
-     * The current stack
+     * The current stack.
      */
-    hdb_stack_t* stack;
+    hdb_value_t* stack;
+
+    /**
+     * The current amount of elements on the stack.
+     */
+    int32_t stack_count;
+
+    /**
+     * The current capacity of the stack.
+     */
+    int32_t stack_capacity;
 } hdb_vm_t;
 
 /**
@@ -101,8 +106,18 @@ const hdb_vm_t* hdb_vm();
  */
 hdb_interpret_result_t hdb_vm_interpret(const char* source);
 
-void hdb_vm_push(hdb_value_t value);
+/**
+ * Pushes the given value onto the stack.
+ *
+ * \param value The value to push onto the stack.
+ */
+void hdb_vm_stack_push(hdb_value_t value);
 
-hdb_value_t hdb_vm_pop();
+/**
+ * Yields and removes the top item from the stack.
+ *
+ * \return The top item from the stack.
+ */
+hdb_value_t hdb_vm_stack_pop();
 
 #endif //HDB_VM_H

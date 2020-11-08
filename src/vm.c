@@ -14,15 +14,12 @@
 hdb_vm_t* vm;
 
 static void stack_init() {
-    vm->stack = os_malloc(sizeof(hdb_stack_t));
-    vm->stack->count = 0;
-    vm->stack->capacity = 8;
-    vm->stack->values = os_malloc(sizeof(hdb_value_t*) * vm->stack->capacity);
-    vm->stack->top = vm->stack->values;
+    vm->stack = os_malloc(sizeof(hdb_value_t*) * vm->stack_capacity);
+    vm->stack_count = 0;
 }
 
 static void stack_grow(uint8_t factor) {
-    const size_t requested_capacity = vm->stack->capacity * factor;
+    const size_t requested_capacity = vm->stack_capacity * factor;
 
     // stackoverflow when requesting size > max capacity
     if (requested_capacity > HDB_STACK_MAX_SIZE) {
@@ -31,10 +28,8 @@ static void stack_grow(uint8_t factor) {
         }
     }
 
-    intptr_t sp = vm->stack->top - vm->stack->values;
-    vm->stack->capacity = requested_capacity;
-    vm->stack->values = os_realloc(vm->stack->values, sizeof(hdb_value_t*) * vm->stack->capacity);
-    vm->stack->top = vm->stack->values + sp;
+    vm->stack_capacity = requested_capacity;
+    vm->stack = os_realloc(vm->stack, sizeof(hdb_value_t*) * vm->stack_capacity);
 }
 
 void hdb_vm_init(size_t heap_min_size, size_t heap_max_size) {
@@ -64,16 +59,17 @@ const hdb_vm_t * hdb_vm() {
     return vm;
 }
 
-void hdb_vm_push(hdb_value_t value) {
+void hdb_vm_stack_push(hdb_value_t value) {
     // Stack doesn't need to grow here because
     // the stack size is set right before executing a chunk of byte code.
-    *vm->stack->top = value;
-    vm->stack->top++;
+    *(vm->stack + vm->stack_count) = value;
+    vm->stack_count++;
 }
 
-hdb_value_t hdb_vm_pop() {
+hdb_value_t hdb_vm_stack_pop() {
     // do not protect against a stack underflow, this will SIGSEGV on its own.
-    return *(--vm->stack->top);
+    vm->stack_count--;
+    return *(vm->stack + vm->stack_count);
 }
 
 static hdb_interpret_result_t run() {
@@ -81,17 +77,18 @@ static hdb_interpret_result_t run() {
 #define READ_CONSTANT() (hdb_chunk_read_constant(vm->chunk, vm->ip++))
 #define BINARY_OP(op) \
     do {              \
-        double right = hdb_vm_pop(); \
-        double left  = hdb_vm_pop(); \
-        hdb_vm_push(left op right);  \
+        double right = hdb_vm_stack_pop(); \
+        double left  = hdb_vm_stack_pop(); \
+        hdb_vm_stack_push(left op right);  \
     } while (false)
 
     for (;;) {
 #ifdef DEBUG_TRACE_EXECUTION
         printf("          ");
-        for (hdb_value_t * slot = vm->stack->values; slot < vm->stack->top; slot++) {
+        for (int32_t slot = 0; slot < vm->stack_count; slot++) {
+            hdb_value_t value = vm->stack[slot];
             printf("[ ");
-            hdb_dbg_print_value(*slot);
+            hdb_dbg_print_value(value);
             printf(" ]");
         }
         printf("\n");
@@ -102,7 +99,7 @@ static hdb_interpret_result_t run() {
             case OP_CONSTANT:
             case OP_CONSTANT_LONG: {
                 hdb_value_t value = READ_CONSTANT();
-                hdb_vm_push(value);
+                hdb_vm_stack_push(value);
                 break;
             }
             case OP_ADD: BINARY_OP(+); break;
@@ -111,16 +108,16 @@ static hdb_interpret_result_t run() {
             case OP_DIVIDE: BINARY_OP(/); break;
             case OP_NEGATE:
             {
-                hdb_value_t *v = (vm->stack->top - 1);
+                hdb_value_t *v = &vm->stack[vm->stack_count] - 1;
                 *v = -(*v);
             }
             break;
             case OP_RETURN:
 #ifdef DEBUG_TRACE_EXECUTION
-                hdb_dbg_print_value(hdb_vm_pop());
+                hdb_dbg_print_value(hdb_vm_stack_pop());
                 printf("\n");
 #else
-                hdb_vm_pop();
+                hdb_vm_stack_pop();
 #endif
                 return INTERPRET_OK;
         }
@@ -133,14 +130,14 @@ static hdb_interpret_result_t run() {
 
 // Increase stack size if required
 static void ensure_stack_size(hdb_chunk_t chunk) {
-    int32_t stack_free = vm->stack->capacity - vm->stack->count;
+    int32_t stack_free = vm->stack_capacity - vm->stack_count;
     if (stack_free >= chunk.stack_high_water_mark) {
         return;
     }
 
     uint8_t factor = 1;
     int32_t min_free_required = chunk.stack_high_water_mark;
-    while((vm->stack->capacity * factor) - vm->stack->count < min_free_required) {
+    while((vm->stack_capacity * factor) - vm->stack_count < min_free_required) {
         factor *= 2;
     }
 
