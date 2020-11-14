@@ -1,7 +1,13 @@
 #include <errno.h>
 #include <unistd.h> // for sbrk()
 #include <string.h> // for memcpy()
+
+#ifdef __APPLE__
+#include <sys/types.h>
+#include <sys/sysctl.h>
+#else
 #include <sys/sysinfo.h> // sysinfo()
+#endif
 
 #include "os.h"
 #include "memory.h"
@@ -79,15 +85,25 @@ static size_t align_pow2(size_t value) {
 }
 
 static size_t initial_heap_size(size_t requested) {
+#ifdef __APPLE__
+    int32_t mib[] = {CTL_HW, HW_MEMSIZE};
+    int64_t total_ram;
+    size_t length = sizeof(total_ram);
+
+    int32_t result = sysctl(mib, 2, &total_ram, &length, NULL, 0);
+#else
     struct sysinfo sys_info;
-    int result = sysinfo(&sys_info);
+    int32_t result = sysinfo(&sys_info);
+
+    int64_t total_ram = sys_info.totalram;
+#endif
 
     size_t aligned_requested = requested < HDB_HEAP_INITIAL_MIN_SIZE
             ? HDB_HEAP_INITIAL_MIN_SIZE
             : align_pow2(requested);
 
     if (result == 0) {
-        size_t sixty_fourth = align_pow2(sys_info.totalram / 64);
+        size_t sixty_fourth = align_pow2(total_ram / 64);
 
         return sixty_fourth > aligned_requested ? sixty_fourth : aligned_requested;
     }

@@ -1,5 +1,7 @@
 project(hdb_tests)
 
+set(CMAKE_CXX_STANDARD 11)
+
 add_subdirectory(lib)
 include_directories(${PROJECT_SOURCE_DIR}/include ${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR} include)
 

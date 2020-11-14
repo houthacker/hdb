@@ -141,6 +141,10 @@ TEST_F(HdbVMFixture, DISABLED_hdb_vm_interpretation_performance) {
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &finish);
 
     timespec d = diff(start, finish);
+#ifdef __APPLE__
+    u_long ns = (d.tv_sec * 1000000000 + d.tv_nsec);
+#else
     ulong ns = (d.tv_sec * 1000000000 + d.tv_nsec);
+#endif
     printf("Duration per chunk: %luns\n", ns / sz);
 }

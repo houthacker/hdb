@@ -136,7 +136,8 @@ TEST_F(HdbMemoryFixture, hdb_malloc_free_block_fragmentation) {
 
         current_block = current_block->next;
     }
-    EXPECT_EQ(current_block->size, 268427264);
+
+    EXPECT_EQ(current_block->size, heap->current_size - (max * 32));
     EXPECT_EQ(current_block->next, nullptr);
 
     // hdb_heap_compact should merge all blocks in a single block, since the space is contiguous.
