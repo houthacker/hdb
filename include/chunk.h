@@ -26,17 +26,120 @@ typedef enum {
     /*!<
      * opcode to read/write a constant \code hdb_value_t\endcode at an index >= 256.
      * Operands:
-     * - int - an 24-bits integer containing the constant value index.
+     * - int - a 24-bits integer containing the constant value index.
      */
     OP_CONSTANT_LONG,
 
+    /*!<
+     * opcode to push the nil value on the stack.
+     */
+    OP_NULL,
+
+    /*!<
+     * opcode to push the boolean value true on the stack.
+     */
+    OP_TRUE,
+
+    /*!<
+     * opcode to push the boolean value false on the stack.
+     */
+    OP_FALSE,
+
+    /*!<
+     * opcode to determine the equality of the two top operands. The result is then pushed onto the stack.
+     * Operands:
+     * - hdb_value_t - the left operand
+     * - hdb_value_t - the right operand
+     */
+    OP_EQUAL,
+
+    /*!<
+     * opcode to determine whether the top two stack operands are not equal. The result is then pushed onto the stack.
+     * Operands:
+     * - hdb_value_t - the left operand
+     * - hdb_value_t - the right operand
+     */
+    OP_NOT_EQUAL,
+
+    /*!<
+     * opcode to determine whether the operand at the top of the stack is greater than the operand
+     * at stack[top-1]. The result is then pushed onto the stack.
+     * Currently only numeric operands are supported.
+     * Operands:
+     * - double - the left operand
+     * - double - the right operand
+     */
+    OP_GREATER,
+
+    /*!<
+     * opcode to determine whether the operand at the top of the stack is greater or equal to the operand
+     * at stack[top-1]. The result is then pushed onto the stack.
+     * Currently only numeric operands are supported.
+     * Operands:
+     * - double - the left operand
+     * - double - the right operand
+     */
+    OP_GREATER_EQUAL,
+
+    /*!<
+     * opcode to determine whether the operand at the top of the stack is less than the operand
+     * at stack[top-1]. The result is then pushed onto the stack.
+     * Currently only numeric operands are supported.
+     * Operands:
+     * - double - the left operand
+     * - double - the right operand
+     */
+    OP_LESS,
+
+    /*!<
+     * opcode to determine whether the operand at the top of the stack is less than or equal to the operand
+     * at stack[top-1]. The result is then pushed onto the stack.
+     * Currently only numeric operands are supported.
+     * Operands:
+     * - double - the left operand
+     * - double - the right operand
+     */
+    OP_LESS_EQUAL,
+
+    /*!<
+     * opcode to add two operands (currently always numbers) together. The result is then pushed onto the stack.
+     * Operands:
+     * - double - the left operand
+     * - double - the right operand
+     */
     OP_ADD,
 
+    /*!<
+     * opcode to subtract the right operand from the left operand (currently always numbers).
+     * The result is then pushed onto the stack.
+     * Operands:
+     * - double - the value being subtracted from
+     * - double - the value being subtracted
+     */
     OP_SUBTRACT,
 
+    /*!<
+     * opcode to multiply two operands (currently always numbers). The result is then pushed onto the stack.
+     * Operands:
+     * - double - the left operand
+     * - double - the right operand
+     */
     OP_MULTIPLY,
 
+    /*!<
+     * opcode to divide the left operand by the right operand (currently always numbers).
+     * The result is then pushed onto the stack.
+     * Operands:
+     * - double - the dividend
+     * - double - the divisor
+     */
     OP_DIVIDE,
+
+    /*!<
+     * opcode to push an unary not to the stack.
+     * Operands: none
+     */
+    OP_NOT,
 
     /*!<
      * opcode to negate the value at the top of the stack.

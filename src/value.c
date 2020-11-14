@@ -17,6 +17,20 @@ void hdb_write_value_array(hdb_value_array_t* array, hdb_value_t value) {
     array->count++;
 }
 
+bool hdb_values_equal(hdb_value_t left, hdb_value_t right) {
+    if (left.type != right.type) {
+        return false;
+    }
+
+    switch(left.type) {
+        case VAL_BOOL: return AS_BOOL(left) == AS_BOOL(right);
+        case VAL_NULL: return true;
+        case VAL_NUMBER: return AS_NUMBER(left) == AS_NUMBER(right);
+        default:
+            return false; // unreachable
+    }
+}
+
 void hdb_free_value_array(hdb_value_array_t* array) {
     HDB_FREE_ARRAY(Value, array->values);
     hdb_init_value_array(array);

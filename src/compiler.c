@@ -157,10 +157,28 @@ static void binary(void) {
     // Emit the operator instruction.
     // Binary operators first pop() two values off the stack, and push() the result back on to it.
     switch(operator_type) {
-        case TOKEN_PLUS:            emit_byte(OP_ADD); HDB_DECREASE_STACK_SIZE(2); HDB_INCREASE_STACK_SIZE(1); break;
-        case TOKEN_MINUS:           emit_byte(OP_SUBTRACT); HDB_DECREASE_STACK_SIZE(2); HDB_INCREASE_STACK_SIZE(1); break;
-        case TOKEN_ASTERISK:        emit_byte(OP_MULTIPLY); HDB_DECREASE_STACK_SIZE(2); HDB_INCREASE_STACK_SIZE(1); break;
-        case TOKEN_FORWARD_SLASH:   emit_byte(OP_DIVIDE); HDB_DECREASE_STACK_SIZE(2); HDB_INCREASE_STACK_SIZE(1); break;
+        case TOKEN_NOT_EQUAL:       emit_byte(OP_NOT_EQUAL); break;
+        case TOKEN_EQUALS:          emit_byte(OP_EQUAL); break;
+        case TOKEN_GREATER_THAN:    emit_byte(OP_GREATER); break;
+        case TOKEN_GREATER_EQUAL:   emit_byte(OP_GREATER_EQUAL); break;
+        case TOKEN_LESS_THAN:       emit_byte(OP_LESS); break;
+        case TOKEN_LESS_EQUAL:      emit_byte(OP_LESS_EQUAL); break;
+        case TOKEN_PLUS:            emit_byte(OP_ADD); break;
+        case TOKEN_MINUS:           emit_byte(OP_SUBTRACT); break;
+        case TOKEN_ASTERISK:        emit_byte(OP_MULTIPLY); break;
+        case TOKEN_FORWARD_SLASH:   emit_byte(OP_DIVIDE); break;
+        default:
+            return; // unreachable
+    }
+
+    HDB_INCREASE_STACK_SIZE(2); HDB_INCREASE_STACK_SIZE(1);
+}
+
+static void literal(void) {
+    switch (parser.previous.type) {
+        case TOKEN_FALSE: emit_byte(OP_FALSE); break;
+        case TOKEN_NULL: emit_byte(OP_NULL); break;
+        case TOKEN_TRUE: emit_byte(OP_TRUE); break;
         default:
             return; // unreachable
     }
@@ -184,6 +202,7 @@ static void unary(void) {
 
     // Emit the operator instruction.
     switch(operator_type) {
+        case TOKEN_BANG:            emit_byte(OP_NOT); break;
         case TOKEN_MINUS:           emit_byte(OP_NEGATE); break;
         default:
             return; // unreachable
@@ -194,24 +213,24 @@ hdb_parse_rule_t rules[] = {
         [TOKEN_DOUBLE_QUOTE]                        = {NULL, NULL, PREC_NONE},
         [TOKEN_PERCENT]                             = {NULL, NULL, PREC_NONE},
         [TOKEN_AMPERSAND]                           = {NULL, NULL, PREC_NONE},
-        [TOKEN_BANG]                                = {NULL, NULL, PREC_NONE},
+        [TOKEN_BANG]                                = { unary, NULL, PREC_NONE},
         [TOKEN_LEFT_PAREN]                          = { grouping, NULL, PREC_NONE},
         [TOKEN_RIGHT_PAREN]                         = {NULL, NULL, PREC_NONE},
         [TOKEN_ASTERISK]                            = {NULL, binary, PREC_FACTOR},
         [TOKEN_PLUS]                                = {NULL, binary, PREC_TERM},
         [TOKEN_COMMA]                               = {NULL, NULL, PREC_NONE},
-        [TOKEN_MINUS]                               = {unary, binary, PREC_TERM},
+        [TOKEN_MINUS]                               = { unary, binary, PREC_TERM},
         [TOKEN_PERIOD]                              = {NULL, NULL, PREC_NONE},
         [TOKEN_BACKSLASH]                           = {NULL, NULL, PREC_NONE},
         [TOKEN_FORWARD_SLASH]                       = {NULL, binary, PREC_FACTOR},
         [TOKEN_COLON]                               = {NULL, NULL, PREC_NONE},
         [TOKEN_SEMICOLON]                           = {NULL, NULL, PREC_NONE},
-        [TOKEN_LESS_THAN]                           = {NULL, NULL, PREC_NONE},
-        [TOKEN_EQUALS]                              = {NULL, NULL, PREC_NONE},
-        [TOKEN_NOT_EQUAL]                           = {NULL, NULL, PREC_NONE},
-        [TOKEN_LESS_EQUAL]                          = {NULL, NULL, PREC_NONE},
-        [TOKEN_GREATER_EQUAL]                       = {NULL, NULL, PREC_NONE},
-        [TOKEN_GREATER_THAN]                        = {NULL, NULL, PREC_NONE},
+        [TOKEN_LESS_THAN]                           = {NULL, binary, PREC_COMPARISON},
+        [TOKEN_EQUALS]                              = {NULL, binary, PREC_EQUALITY},
+        [TOKEN_NOT_EQUAL]                           = {NULL, binary, PREC_COMPARISON},
+        [TOKEN_LESS_EQUAL]                          = {NULL, binary, PREC_COMPARISON},
+        [TOKEN_GREATER_EQUAL]                       = {NULL, binary, PREC_COMPARISON},
+        [TOKEN_GREATER_THAN]                        = {NULL, binary, PREC_COMPARISON},
         [TOKEN_QUESTION_MARK]                       = {NULL, NULL, PREC_NONE},
         [TOKEN_LEFT_BRACKET]                        = {NULL, NULL, PREC_NONE},
         [TOKEN_RIGHT_BRACKET]                       = {NULL, NULL, PREC_NONE},
@@ -222,7 +241,7 @@ hdb_parse_rule_t rules[] = {
         [TOKEN_STRING]                              = {NULL, NULL, PREC_NONE},
         [TOKEN_IDENTIFIER]                          = {NULL, NULL, PREC_NONE},
         [TOKEN_ENCLOSED_IDENTIFIER]                 = {NULL, NULL, PREC_NONE},
-        [TOKEN_NUMBER]                              = {number, NULL, PREC_NONE},
+        [TOKEN_NUMBER]                              = { number, NULL, PREC_NONE},
         [TOKEN_ERROR]                               = {NULL, NULL, PREC_NONE},
         [TOKEN_EOF]                                 = {NULL, NULL, PREC_NONE},
         [TOKEN_ABSOLUTE]                            = {NULL, NULL, PREC_NONE},
@@ -327,7 +346,7 @@ hdb_parse_rule_t rules[] = {
         [TOKEN_EXISTS]                              = {NULL, NULL, PREC_NONE},
         [TOKEN_EXIT]                                = {NULL, NULL, PREC_NONE},
         [TOKEN_EXTERNAL]                            = {NULL, NULL, PREC_NONE},
-        [TOKEN_FALSE]                               = {NULL, NULL, PREC_NONE},
+        [TOKEN_FALSE]                               = { literal, NULL, PREC_NONE},
         [TOKEN_FETCH]                               = {NULL, NULL, PREC_NONE},
         [TOKEN_FIRST]                               = {NULL, NULL, PREC_NONE},
         [TOKEN_FLOAT]                               = {NULL, NULL, PREC_NONE},
@@ -401,7 +420,7 @@ hdb_parse_rule_t rules[] = {
         [TOKEN_NO]                                  = {NULL, NULL, PREC_NONE},
         [TOKEN_NONE]                                = {NULL, NULL, PREC_NONE},
         [TOKEN_NOT]                                 = {NULL, NULL, PREC_NONE},
-        [TOKEN_NULL]                                = {NULL, NULL, PREC_NONE},
+        [TOKEN_NULL]                                = { literal, NULL, PREC_NONE},
         [TOKEN_NUMERIC]                             = {NULL, NULL, PREC_NONE},
         [TOKEN_OBJECT]                              = {NULL, NULL, PREC_NONE},
         [TOKEN_OF]                                  = {NULL, NULL, PREC_NONE},
@@ -493,7 +512,7 @@ hdb_parse_rule_t rules[] = {
         [TOKEN_TRANSLATION]                         = {NULL, NULL, PREC_NONE},
         [TOKEN_TREAT]                               = {NULL, NULL, PREC_NONE},
         [TOKEN_TRIGGER]                             = {NULL, NULL, PREC_NONE},
-        [TOKEN_TRUE]                                = {NULL, NULL, PREC_NONE},
+        [TOKEN_TRUE]                                = { literal, NULL, PREC_NONE},
         [TOKEN_UNDER]                               = {NULL, NULL, PREC_NONE},
         [TOKEN_UNDO]                                = {NULL, NULL, PREC_NONE},
         [TOKEN_UNION]                               = {NULL, NULL, PREC_NONE},

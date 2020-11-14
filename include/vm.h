@@ -91,12 +91,12 @@ void hdb_vm_init(size_t heap_min_size, size_t heap_max_size);
 /**
  * Stops and destroys the HDB Virtual Machine.
  */
-void hdb_vm_free();
+void hdb_vm_free(void);
 
 /**
  * \return The current HDB Virtual Machine
  */
-const hdb_vm_t* hdb_vm();
+const hdb_vm_t* hdb_vm(void);
 
 /**
  * Interprets the byte code in the given chunk and returns the result state.
@@ -118,6 +118,6 @@ void hdb_vm_stack_push(hdb_value_t value);
  *
  * \return The top item from the stack.
  */
-hdb_value_t hdb_vm_stack_pop();
+hdb_value_t hdb_vm_stack_pop(void);
 
 #endif //HDB_VM_H

@@ -126,17 +126,53 @@ static hdb_interpret_result_t run(void) {
                 hdb_vm_stack_push(value);
                 break;
             }
-            case OP_ADD:        BINARY_OP(NUMBER_VAL, +); break;
-            case OP_SUBTRACT:   BINARY_OP(NUMBER_VAL, -); break;
-            case OP_MULTIPLY:   BINARY_OP(NUMBER_VAL, *); break;
-            case OP_DIVIDE:     BINARY_OP(NUMBER_VAL, /); break;
-            case OP_NEGATE:
-            {
+
+            case OP_NULL:       hdb_vm_stack_push(NULL_VAL); break;
+            case OP_TRUE:       hdb_vm_stack_push(BOOL_VAL(true)); break;
+            case OP_FALSE:      hdb_vm_stack_push(BOOL_VAL(false)); break;
+
+            case OP_EQUAL: {
+                hdb_value_t right = hdb_vm_stack_pop();
+                hdb_value_t left  = hdb_vm_stack_pop();
+                hdb_vm_stack_push(BOOL_VAL(hdb_values_equal(left, right)));
+                break;
+            }
+
+            case OP_NOT_EQUAL: {
+                hdb_value_t right = hdb_vm_stack_pop();
+                hdb_value_t left = hdb_vm_stack_pop();
+                hdb_vm_stack_push(BOOL_VAL(!hdb_values_equal(left, right)));
+                break;
+            }
+
+            case OP_LESS:           BINARY_OP(NUMBER_VAL, <); break;
+            case OP_LESS_EQUAL:     BINARY_OP(NUMBER_VAL, <=); break;
+            case OP_GREATER:        BINARY_OP(NUMBER_VAL, >); break;
+            case OP_GREATER_EQUAL:  BINARY_OP(NUMBER_VAL, >=); break;
+            case OP_ADD:            BINARY_OP(NUMBER_VAL, +); break;
+            case OP_SUBTRACT:       BINARY_OP(NUMBER_VAL, -); break;
+            case OP_MULTIPLY:       BINARY_OP(NUMBER_VAL, *); break;
+            case OP_DIVIDE:         BINARY_OP(NUMBER_VAL, /); break;
+            case OP_NOT: {
+                hdb_value_t *v = &vm->stack[vm->stack_count] - 1;
+
+                if (!IS_BOOL(*v)) {
+                    runtime_error("Operand must be a boolean value.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+
+                // Update in-place
+                v->as.boolean = !v->as.boolean;
+                break;
+            }
+
+            case OP_NEGATE: {
                 if (!IS_NUMBER(stack_peek(0))) {
                     runtime_error("Operand must be a number.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
 
+                // Update in-place
                 hdb_value_t *v = &vm->stack[vm->stack_count] - 1;
                 v->as.number = -v->as.number;
             }
