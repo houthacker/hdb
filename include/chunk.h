@@ -31,19 +31,46 @@ typedef enum {
     OP_CONSTANT_LONG,
 
     /*!<
-     * opcode to push the nil value on the stack.
+     * opcode to push the null value on the stack.
+     * Operands: none
      */
     OP_NULL,
 
     /*!<
      * opcode to push the boolean value true on the stack.
+     * Operands: none
      */
     OP_TRUE,
 
     /*!<
      * opcode to push the boolean value false on the stack.
+     * Operands: none
      */
     OP_FALSE,
+
+     /*!<
+      * opcode to push the value -1.0 on the stack.
+      * Operands: none
+      */
+     OP_MINUS_ONE,
+
+     /*!<
+      * opcode to push the value 0.0 on the stack.
+      * Operands: none
+      */
+     OP_ZERO,
+
+     /*!<
+      * opcode to push the value 1.0 on the stack.
+      * Operands: none
+      */
+     OP_ONE,
+
+     /*!<
+      * opcode to push the value 2.0 on the stack.
+      * Operands: none
+      */
+     OP_TWO,
 
     /*!<
      * opcode to determine the equality of the two top operands. The result is then pushed onto the stack.

@@ -171,7 +171,7 @@ static void binary(void) {
             return; // unreachable
     }
 
-    HDB_INCREASE_STACK_SIZE(2); HDB_INCREASE_STACK_SIZE(1);
+    HDB_INCREASE_STACK_SIZE(-2); HDB_INCREASE_STACK_SIZE(1);
 }
 
 static void literal(void) {
@@ -191,7 +191,18 @@ static void grouping(void) {
 
 static void number(void) {
     double value = strtod(parser.previous.start, NULL);
-    emit_constant(NUMBER_VAL(value));
+
+    if (value == -1.0) {
+        emit_byte(OP_MINUS_ONE);
+    } else if (value == 0.0) {
+        emit_byte(OP_ZERO);
+    } else if (value == 1.0) {
+        emit_byte(OP_ONE);
+    } else if (value == 2.0) {
+        emit_byte(OP_TWO);
+    } else {
+        emit_constant(NUMBER_VAL(value));
+    }
 }
 
 static void unary(void) {

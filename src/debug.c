@@ -62,6 +62,14 @@ int hdb_dbg_disassemble_instruction(hdb_chunk_t* chunk, int32_t offset) {
             return simple_instruction("OP_TRUE", offset);
         case OP_FALSE:
             return simple_instruction("OP_FALSE", offset);
+        case OP_MINUS_ONE:
+            return simple_instruction("OP_MINUS_ONE", offset);
+        case OP_ZERO:
+            return simple_instruction("OP_ZERO", offset);
+        case OP_ONE:
+            return simple_instruction("OP_ONE", offset);
+        case OP_TWO:
+            return simple_instruction("OP_TWO", offset);
         case OP_EQUAL:
             return simple_instruction("OP_EQUAL", offset);
         case OP_NOT_EQUAL:

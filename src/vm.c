@@ -130,6 +130,10 @@ static hdb_interpret_result_t run(void) {
             case OP_NULL:       hdb_vm_stack_push(NULL_VAL); break;
             case OP_TRUE:       hdb_vm_stack_push(BOOL_VAL(true)); break;
             case OP_FALSE:      hdb_vm_stack_push(BOOL_VAL(false)); break;
+            case OP_MINUS_ONE:  hdb_vm_stack_push(NUMBER_VAL(-1.0)); break;
+            case OP_ZERO:       hdb_vm_stack_push(NUMBER_VAL(0.0)); break;
+            case OP_ONE:        hdb_vm_stack_push(NUMBER_VAL(1.0)); break;
+            case OP_TWO:        hdb_vm_stack_push(NUMBER_VAL(2.0)); break;
 
             case OP_EQUAL: {
                 hdb_value_t right = hdb_vm_stack_pop();
