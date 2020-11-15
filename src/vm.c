@@ -1,6 +1,7 @@
 #include <stdio.h> // printf
 #include <signal.h> // signal numbers
 #include <stdarg.h> // va_list
+#include <string.h> // memcpy
 
 #include "memory.h"
 #include "os.h"
@@ -8,6 +9,7 @@
 #include "debug.h"
 #include "vm.h"
 #include "compiler.h"
+#include "object.h"
 
 hdb_vm_t* vm;
 
@@ -49,11 +51,16 @@ static void stack_grow(uint8_t factor) {
 
 void hdb_vm_init(size_t heap_min_size, size_t heap_max_size) {
     if (!vm) {
-        hdb_heap_init(heap_min_size, heap_max_size);
+        hdb_heap_view_t* heap = hdb_heap_init(heap_min_size, heap_max_size);
 
         vm = os_malloc(sizeof(hdb_vm_t));
-        stack_init();
+        vm->objects = NULL;
 
+        // Set initial stack size so stack_init() will claim some memory for it.
+        int32_t heap_based_stack_capacity = heap->current_size / 4096;
+        vm->stack_capacity = heap_based_stack_capacity == 0 ? 512 : heap_based_stack_capacity;
+
+        stack_init();
         hdb_compiler_init();
     }
 }
@@ -87,9 +94,31 @@ hdb_value_t hdb_vm_stack_pop(void) {
     return *(vm->stack + vm->stack_count);
 }
 
+void hdb_vm_notify_new(hdb_object_t* object) {
+    if (object) {
+        object->next = vm->objects;
+        vm->objects = object;
+    }
+}
+
 static hdb_value_t stack_peek(int32_t distance) {
     // todo prevent stack underflow
     return *(vm->stack + vm->stack_count - 1 - distance);
+}
+
+static void concatenate() {
+    hdb_string_t* right = AS_STRING(hdb_vm_stack_pop());
+    hdb_string_t* left = AS_STRING(hdb_vm_stack_pop());
+
+    int32_t length = left->length + right->length;
+    char* chars = HDB_ALLOCATE(char, length + 1);
+    memcpy(chars, left->chars, left->length);
+    memcpy(chars + left->length, right->chars, right->length);
+    chars[length] = '\0';
+
+    hdb_string_t* result = hdb_object_take_string(chars, length);
+    hdb_vm_stack_push(OBJ_VAL(result));
+
 }
 
 static hdb_interpret_result_t run(void) {
@@ -153,7 +182,18 @@ static hdb_interpret_result_t run(void) {
             case OP_LESS_EQUAL:     BINARY_OP(NUMBER_VAL, <=); break;
             case OP_GREATER:        BINARY_OP(NUMBER_VAL, >); break;
             case OP_GREATER_EQUAL:  BINARY_OP(NUMBER_VAL, >=); break;
-            case OP_ADD:            BINARY_OP(NUMBER_VAL, +); break;
+            case OP_ADD: {
+                if (IS_STRING(stack_peek(0)) && IS_STRING(stack_peek(1))) {
+                    concatenate();
+                } else if (IS_NUMBER(stack_peek(0)) && IS_NUMBER(stack_peek(1))) {
+                    BINARY_OP(NUMBER_VAL, +);
+                } else {
+                    runtime_error("Operands must be two numbers or two strings.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                break;
+            }
+
             case OP_SUBTRACT:       BINARY_OP(NUMBER_VAL, -); break;
             case OP_MULTIPLY:       BINARY_OP(NUMBER_VAL, *); break;
             case OP_DIVIDE:         BINARY_OP(NUMBER_VAL, /); break;

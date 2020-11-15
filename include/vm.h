@@ -56,6 +56,11 @@ typedef struct {
      * The current capacity of the stack.
      */
     int32_t stack_capacity;
+
+    /**
+     * A linked list of all objects that have been allocated during the runtime of this Virtual Machine.
+     */
+    hdb_object_t* objects;
 } hdb_vm_t;
 
 /**
@@ -119,5 +124,12 @@ void hdb_vm_stack_push(hdb_value_t value);
  * \return The top item from the stack.
  */
 hdb_value_t hdb_vm_stack_pop(void);
+
+/**
+ * Notifies the HDB Virtual Machine of the creation of a new object.
+ *
+ * @param object A pointer to the newly created object.
+ */
+void hdb_vm_notify_new(hdb_object_t* object);
 
 #endif //HDB_VM_H

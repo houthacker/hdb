@@ -128,6 +128,22 @@ TEST_F(HdbVMFixture, hdb_equals_bool) {
     EXPECT_EQ(AS_BOOL(vm->stack[vm->stack_count]), true);
 }
 
+TEST_F(HdbVMFixture, hdb_equals_string) {
+    const char* source = "'stringy' = 'stringy'";
+    hdb_interpret_result_t result = hdb_vm_interpret(source);
+
+    EXPECT_EQ(result, INTERPRET_OK);
+    EXPECT_EQ(AS_BOOL(vm->stack[vm->stack_count]), true);
+}
+
+TEST_F(HdbVMFixture, hdb_equals_different_strings) {
+    const char* source = "'stringa' = 'stringb'";
+    hdb_interpret_result_t result = hdb_vm_interpret(source);
+
+    EXPECT_EQ(result, INTERPRET_OK);
+    EXPECT_EQ(AS_BOOL(vm->stack[vm->stack_count]), false);
+}
+
 TEST_F(HdbVMFixture, DISABLED_hdb_vm_interpretation_performance) {
     // Only run this test when DEBUG_TRACE_EXECUTION and DEBUG_PRINT_CODE are off! see common.h
 

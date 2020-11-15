@@ -3,6 +3,7 @@
 #include "debug.h"
 #include "value.h"
 #include "line.h"
+#include "object.h"
 
 static int constant_instruction(const char* name, hdb_chunk_t* chunk, int32_t offset) {
     uint8_t index = chunk->code[offset + 1];
@@ -31,6 +32,14 @@ static int constant_long_instruction(const char* name, hdb_chunk_t* chunk, int32
 static int simple_instruction(const char* name, int32_t offset) {
     printf("%s\n", name);
     return offset + 1;
+}
+
+static void print_object(hdb_value_t value) {
+    switch (OBJ_TYPE(value)) {
+        case OBJ_STRING:
+            printf("%s", AS_CSTRING(value));
+            break;
+    }
 }
 
 void hdb_dbg_disassemble_chunk(hdb_chunk_t* chunk, const char* name) {
@@ -108,5 +117,6 @@ void hdb_dbg_print_value(hdb_value_t value) {
             printf(AS_BOOL(value) ? "true" : "false"); break;
         case VAL_NULL: printf("null"); break;
         case VAL_NUMBER: printf("%g", AS_NUMBER(value)); break;
+        case VAL_OBJ: print_object(value); break;
     }
 }

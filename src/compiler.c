@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "object.h"
 #include "common.h"
 #include "compiler.h"
 #include "scanner.h"
@@ -205,6 +206,11 @@ static void number(void) {
     }
 }
 
+static void string(void) {
+    emit_constant(OBJ_VAL(hdb_object_copy_string(parser.previous.start + 1,
+                                      parser.previous.length - 2)));
+}
+
 static void unary(void) {
     hdb_token_type_t operator_type = parser.previous.type;
 
@@ -249,7 +255,7 @@ hdb_parse_rule_t rules[] = {
         [TOKEN_VERTICAL_BAR]                        = {NULL, NULL, PREC_NONE},
         [TOKEN_LEFT_BRACE]                          = {NULL, NULL, PREC_NONE},
         [TOKEN_RIGHT_BRACE]                         = {NULL, NULL, PREC_NONE},
-        [TOKEN_STRING]                              = {NULL, NULL, PREC_NONE},
+        [TOKEN_STRING]                              = {string, NULL, PREC_NONE},
         [TOKEN_IDENTIFIER]                          = {NULL, NULL, PREC_NONE},
         [TOKEN_ENCLOSED_IDENTIFIER]                 = {NULL, NULL, PREC_NONE},
         [TOKEN_NUMBER]                              = { number, NULL, PREC_NONE},
@@ -578,6 +584,7 @@ static void expression(void) {
 }
 
 bool hdb_compiler_compile(const char* source, hdb_chunk_t* chunk) {
+    parser.had_error = parser.panic_mode = false;
     stack_high_water_mark = stack_size = 0;
 
     hdb_scanner_init(source);

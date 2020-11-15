@@ -9,6 +9,9 @@
 
 #include "common.h"
 
+#define HDB_ALLOCATE(type, count) \
+    (type*)hdb_malloc(sizeof(type) * (count))
+
 #define HDB_GROW_CAPACITY(capacity) \
     ((capacity) < 8 ? 8 : (capacity) * 2)
 
@@ -192,10 +195,11 @@ void hdb_free(void* ptr);
  * Allocates \c new_size bytes of memory preserving and returns a pointer to it. The data in
  * \c ptr is preserved. If new memory must be allocated but it fails, this method returns \c NULL and
  * \c errno is set accordingly.
- * If a \c newSize of 0 is provided, the given pointer is freed.
+ * If a @param ptr of @c NULL is provided, the implementation is identical to a call to hdb_malloc(new_size).
+ * If a @param new_size of 0 is provided, the given pointer is hdb_free()'d.
  *
  * \param ptr A pointer to a blob of data previously retrieved by \c hdb_malloc().
- * \param new_size The requested new data size in bytes.
+ * @param new_size The requested new data size in bytes.
  * \return A pointer to the new data, or \c NULL if no memory has been allocated.
  */
 void* hdb_reallocate(void* ptr, size_t new_size);

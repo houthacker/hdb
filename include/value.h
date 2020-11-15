@@ -7,10 +7,13 @@
 #ifndef HDB_VALUE_H
 #define HDB_VALUE_H
 
+typedef struct hdb_object hdb_object_t;
+
 typedef enum {
     VAL_BOOL,
     VAL_NULL,
-    VAL_NUMBER
+    VAL_NUMBER,
+    VAL_OBJ
 } hdb_value_type_t;
 
 /**
@@ -21,19 +24,23 @@ typedef struct {
     union {
         bool boolean;
         double number;
+        hdb_object_t* obj;
     } as;
 } hdb_value_t;
 
 #define IS_BOOL(value)      ((value).type == VAL_BOOL)
 #define IS_NULL (value)     ((value).type == VAL_NULL)
 #define IS_NUMBER(value)    ((value).type == VAL_NUMBER)
+#define IS_OBJ(value)       ((value).type == VAL_OBJ)
 
+#define AS_OBJ(value)       ((value).as.obj)
 #define AS_BOOL(value)      ((value).as.boolean)
 #define AS_NUMBER(value)    ((value).as.number)
 
 #define BOOL_VAL(literal)   ((hdb_value_t){VAL_BOOL,    {.boolean   = literal}})
 #define NULL_VAL            ((hdb_value_t){VAL_NULL,    {.number    = 0}})
 #define NUMBER_VAL(literal) ((hdb_value_t){VAL_NUMBER,  {.number    = literal}})
+#define OBJ_VAL(object)     ((hdb_value_t){VAL_OBJ,     {.obj       = (hdb_object_t*)object}})
 
 /**
  * Structure to store multiple values.

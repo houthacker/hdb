@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "vm.h"
 #include "os.h"
@@ -13,6 +14,9 @@ static void repl() {
             printf("\n");
             break;
         }
+
+        // poor man's exit
+        if (strncmp(line, ".exit", 5) == 0) { break; }
 
         hdb_vm_interpret(line);
     }
