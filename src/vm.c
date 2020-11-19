@@ -111,14 +111,13 @@ static void concatenate() {
     hdb_string_t* left = AS_STRING(hdb_vm_stack_pop());
 
     int32_t length = left->length + right->length;
-    char* chars = HDB_ALLOCATE(char, length + 1);
-    memcpy(chars, left->chars, left->length);
-    memcpy(chars + left->length, right->chars, right->length);
-    chars[length] = '\0';
+    hdb_string_t* result = hdb_object_create_string(length);
 
-    hdb_string_t* result = hdb_object_take_string(chars, length);
+    memcpy(result->chars, left->chars, left->length);
+    memcpy(result->chars + left->length, right->chars, right->length);
+    result->chars[length] = '\0';
+
     hdb_vm_stack_push(OBJ_VAL(result));
-
 }
 
 static hdb_interpret_result_t run(void) {

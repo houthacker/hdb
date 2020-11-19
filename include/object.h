@@ -66,18 +66,17 @@ typedef struct hdb_string {
     /**
      * The actual characters of the string, including the terminating '\0'.
      */
-    char* chars;
+    char chars[];
 } hdb_string_t;
 
 /**
- * Creates a new @c hdb_string on the heap of the HDB Virtual Machine, claiming ownership of @p chars by
- * using the given pointer to create the new @c hdb_string.
+ * Creates a new @c hdb_string on the heap of the HDB Virtual Machine. The characters in the string
+ * are not initialized and may contain garbage.
  *
- * @param chars The characters to use when creating the new @c hdb_string.
  * @param length The amount of characters to take from @chars, excluding the terminating '\0'.
  * @return A pointer to the new @c hdb_string.
  */
-hdb_string_t* hdb_object_take_string(char* chars, uint32_t length);
+hdb_string_t* hdb_object_create_string(uint32_t length);
 
 /**
  * Creates a @c hdb_string on the heap of the HDB Virtual Machine. To create the new @c hdb_string,

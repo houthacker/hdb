@@ -6,6 +6,7 @@ extern "C" {
 #include <vm.h>
 #include <memory.h>
 #include <chunk.h>
+#include <object.h>
 }
 
 class HdbVMFixture : public ::testing::Test {
@@ -142,6 +143,20 @@ TEST_F(HdbVMFixture, hdb_equals_different_strings) {
 
     EXPECT_EQ(result, INTERPRET_OK);
     EXPECT_EQ(AS_BOOL(vm->stack[vm->stack_count]), false);
+}
+
+TEST_F(HdbVMFixture, hdb_string_concatenation) {
+    const char* source = "'st' + 'ri' + 'ng'";
+    hdb_interpret_result_t result = hdb_vm_interpret(source);
+
+    EXPECT_EQ(result, INTERPRET_OK);
+
+    hdb_value_t value = vm->stack[vm->stack_count];
+    EXPECT_TRUE(IS_STRING(value));
+
+    hdb_string_t* string = AS_STRING(value);
+    EXPECT_EQ(string->length, 6);
+    EXPECT_STREQ(AS_CSTRING(value), "string");
 }
 
 TEST_F(HdbVMFixture, DISABLED_hdb_vm_interpretation_performance) {
