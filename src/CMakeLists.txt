@@ -1,6 +1,6 @@
 project(hdb)
 
-set(SOURCE_FILES os.c memory.c line.c chunk.c value.c vm.c debug.c compiler.c scanner.c object.c)
+set(SOURCE_FILES os.c memory.c line.c chunk.c value.c vm.c debug.c compiler.c scanner.c object.c ustring.c)
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 

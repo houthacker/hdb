@@ -9,7 +9,7 @@
 #include "debug.h"
 #include "vm.h"
 #include "compiler.h"
-#include "object.h"
+#include "ustring.h"
 
 hdb_vm_t* vm;
 
@@ -107,15 +107,9 @@ static hdb_value_t stack_peek(int32_t distance) {
 }
 
 static void concatenate() {
-    hdb_string_t* right = AS_STRING(hdb_vm_stack_pop());
-    hdb_string_t* left = AS_STRING(hdb_vm_stack_pop());
-
-    int32_t length = left->length + right->length;
-    hdb_string_t* result = hdb_object_create_string(length);
-
-    memcpy(result->chars, left->chars, left->length);
-    memcpy(result->chars + left->length, right->chars, right->length);
-    result->chars[length] = '\0';
+    hdb_ustring_t* right = AS_STRING(hdb_vm_stack_pop());
+    hdb_ustring_t* left = AS_STRING(hdb_vm_stack_pop());
+    hdb_ustring_t* result = hdb_ustring_concatenate(left, right);
 
     hdb_vm_stack_push(OBJ_VAL(result));
 }

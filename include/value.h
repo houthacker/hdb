@@ -7,6 +7,8 @@
 #ifndef HDB_VALUE_H
 #define HDB_VALUE_H
 
+#include "common.h"
+
 typedef struct hdb_object hdb_object_t;
 
 typedef enum {

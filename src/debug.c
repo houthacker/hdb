@@ -4,6 +4,7 @@
 #include "value.h"
 #include "line.h"
 #include "object.h"
+#include "ustring.h"
 
 static int constant_instruction(const char* name, hdb_chunk_t* chunk, int32_t offset) {
     uint8_t index = chunk->code[offset + 1];

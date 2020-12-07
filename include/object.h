@@ -11,11 +11,7 @@
 #include "value.h"
 
 #define OBJ_TYPE(value)     (AS_OBJ(value)->type)
-
 #define IS_STRING(object)   hdb_is_object_type(object, OBJ_STRING)
-
-#define AS_STRING(value)    ((hdb_string_t*)AS_OBJ(value))
-#define AS_CSTRING(value)   (((hdb_string_t*)AS_OBJ(value))->chars)
 
 /**
  * Defines the currently supported object types.
@@ -49,44 +45,13 @@ typedef struct hdb_object {
 } hdb_object_t;
 
 /**
- * Definition of the string data type.
- */
-typedef struct hdb_string {
-
-    /**
-     * Shared information to indicate this is a string.
-     */
-    hdb_object_t obj;
-
-    /**
-     * The length of the string, excluding the terminating '\0'.
-     */
-    uint32_t length;
-
-    /**
-     * The actual characters of the string, including the terminating '\0'.
-     */
-    char chars[];
-} hdb_string_t;
-
-/**
- * Creates a new @c hdb_string on the heap of the HDB Virtual Machine. The characters in the string
- * are not initialized and may contain garbage.
+ * Creates a new @c hdb_object_t and notifies the HDB Virtual Machine.
  *
- * @param length The amount of characters to take from @chars, excluding the terminating '\0'.
- * @return A pointer to the new @c hdb_string.
+ * @param size The amount of bytes to allocate for this object.
+ * @param type The type of object to create.
+ * @return
  */
-hdb_string_t* hdb_object_create_string(uint32_t length);
-
-/**
- * Creates a @c hdb_string on the heap of the HDB Virtual Machine. To create the new @c hdb_string,
- * a copy of the requested characters is made, thus requiring to hdb_free() it.
- *
- * @param chars The source characters to create the new @c hdb_string.
- * @param length The amount of characters to use from @p chars, excluding the terminating '\0'.
- * @return A pointer to the new @c hdb_string.
- */
-hdb_string_t* hdb_object_copy_string(const char* chars, uint32_t length);
+hdb_object_t* hdb_object_create(size_t size, hdb_object_type_t type);
 
 static inline bool hdb_is_object_type(hdb_value_t value, hdb_object_type_t type) {
     return IS_OBJ(value) && AS_OBJ(value)->type == type;

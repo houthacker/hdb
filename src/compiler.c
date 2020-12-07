@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "object.h"
+#include "ustring.h"
 #include "common.h"
 #include "compiler.h"
 #include "scanner.h"
@@ -207,7 +208,7 @@ static void number(void) {
 }
 
 static void string(void) {
-    emit_constant(OBJ_VAL(hdb_object_copy_string(parser.previous.start + 1,
+    emit_constant(OBJ_VAL(hdb_ustring_ncreate(parser.previous.start + 1,
                                       parser.previous.length - 2)));
 }
 

@@ -3,6 +3,7 @@
 #include "memory.h"
 #include "value.h"
 #include "object.h"
+#include "ustring.h"
 
 void hdb_init_value_array(hdb_value_array_t* array) {
     array->values = NULL;
@@ -30,8 +31,8 @@ bool hdb_values_equal(hdb_value_t left, hdb_value_t right) {
         case VAL_NULL: return true;
         case VAL_NUMBER: return AS_NUMBER(left) == AS_NUMBER(right);
         case VAL_OBJ: {
-            hdb_string_t* a = AS_STRING(left);
-            hdb_string_t* b = AS_STRING(right);
+            hdb_ustring_t* a = AS_STRING(left);
+            hdb_ustring_t* b = AS_STRING(right);
             return a->length == b->length &&
                 memcmp(a->chars, b->chars, a->length) == 0;
         }

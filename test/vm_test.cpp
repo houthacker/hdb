@@ -7,6 +7,7 @@ extern "C" {
 #include <memory.h>
 #include <chunk.h>
 #include <object.h>
+#include <ustring.h>
 }
 
 class HdbVMFixture : public ::testing::Test {
@@ -154,7 +155,7 @@ TEST_F(HdbVMFixture, hdb_string_concatenation) {
     hdb_value_t value = vm->stack[vm->stack_count];
     EXPECT_TRUE(IS_STRING(value));
 
-    hdb_string_t* string = AS_STRING(value);
+    hdb_ustring_t* string = AS_STRING(value);
     EXPECT_EQ(string->length, 6);
     EXPECT_STREQ(AS_CSTRING(value), "string");
 }
